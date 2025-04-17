@@ -10,3 +10,107 @@ Combina reconocimiento de audio y visión por computadora (YOLOv5) para:
 ---
 
 ## 📁 Estructura del repositorio
+
+IAfishingDetector/ ├── .gitignore ├── README.md ├── requirements.txt ├── main.py ├── detect.py ├── sound_validator.py ├── capturador.py ├── normalize_sounds.py ├── compare_fft.py ├── compare_live_sound.py ├── compare_live_sound_fft.py ├── train_yolo.py └── yolov5s.pt
+
+
+- **main.py**  
+  Orquesta el ciclo audio→visión→clic.  
+- **detect.py**  
+  Detecta el corcho en pantalla usando el modelo YOLO.  
+- **sound_validator.py**  
+  Valida y preprocesa los archivos de audio de referencia.  
+- **capturador.py**  
+  Captura audio en tiempo real desde el sistema.  
+- **normalize_sounds.py**  
+  Normaliza niveles y formato de audio para entrenamiento.  
+- **compare_fft.py**, **compare_live_sound_fft.py**  
+  Comparan señales en el dominio frecuencia (FFT).  
+- **compare_live_sound.py**  
+  Comparación directa de formas de onda (cross‑correlation).  
+- **train_yolo.py**  
+  Script para entrenar tu propio modelo YOLO con tus imágenes.  
+- **yolov5s.pt**  
+  Peso base de YOLOv5 (light).  
+
+> **Nota:** Los directorios `dataset/`, `labelimg-env/` y `normalized/` están en `.gitignore` y no se versionan.
+
+---
+
+## 🚀 Requisitos
+
+- Python 3.10+  
+- `ffmpeg` (para procesado de audio)  
+- Entorno virtual (recomendado)  
+
+---
+
+## ⚙️ Instalación
+
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/Leo921007/IAfishingDetector.git
+   cd IAfishingDetector
+2. Crea y activa un entorno virtual:
+    bash
+    python -m venv venv
+    # Windows:
+    venv\Scripts\activate
+    # Linux/macOS:
+    source venv/bin/activate
+3. Instala dependencias:
+
+    bash
+    pip install -r requirements.txt
+    Verifica que ffmpeg esté en tu PATH:
+
+    bash
+    ffmpeg -version
+
+🎯 Uso
+1. Validar sonidos de referencia
+
+    bash
+
+    python sound_validator.py --input Fishing_1.wav Fishing_2.wav Fishing_3.wav
+    Normalizar audios
+
+    bash
+
+    python normalize_sounds.py --input Fishing_*.wav --output normalized/
+    Comparar señal en vivo
+
+2. Dominio tiempo:
+
+    bash
+
+    python compare_live_sound.py --reference normalized/Fishing_1.wav
+    Dominio frecuencia:
+
+    bash
+
+    python compare_live_sound_fft.py --reference normalized/Fishing_1.wav
+    Detectar corcho y clic automático
+
+    bash
+
+    python main.py
+3. Entrenar tu modelo YOLO
+    Prepara tu dataset (imágenes + labels) y luego:
+
+    bash
+
+    python train_yolo.py --data dataset/data.yaml --cfg yolov5s.yaml --epochs 50
+    🔧 Configuración
+    Ajusta umbrales de detección en detect.py y compare_live_sound.py.
+
+    Cambia el modelo o ruta en train_yolo.py según tu configuración de YOLOv5.
+
+📚 Referencias
+YOLOv5
+
+Documentación oficial de pyaudio, opencv-python, numpy, etc.
+
+📝 Licencia
+Proyecto bajo licencia MIT. Consulta el archivo LICENSE para más detalles.
+"@ > README.md
