@@ -1,4 +1,3 @@
-@"
 # IAfishingDetector
 
 Un proyecto de detección y automatización para la pesca en World of Warcraft 4.3.4.  
@@ -11,8 +10,22 @@ Combina reconocimiento de audio y visión por computadora (YOLOv5) para:
 
 ## 📁 Estructura del repositorio
 
-IAfishingDetector/ ├── .gitignore ├── README.md ├── requirements.txt ├── main.py ├── detect.py ├── sound_validator.py ├── capturador.py ├── normalize_sounds.py ├── compare_fft.py ├── compare_live_sound.py ├── compare_live_sound_fft.py ├── train_yolo.py └── yolov5s.pt
-
+```
+IAfishingDetector/
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── main.py
+├── detect.py
+├── sound_validator.py
+├── capturador.py
+├── normalize_sounds.py
+├── compare_fft.py
+├── compare_live_sound.py
+├── compare_live_sound_fft.py
+├── train_yolo.py
+└── yolov5s.pt
+```
 
 - **main.py**  
   Orquesta el ciclo audio→visión→clic.  
@@ -47,70 +60,75 @@ IAfishingDetector/ ├── .gitignore ├── README.md ├── requiremen
 
 ## ⚙️ Instalación
 
-1. Clona el repositorio:
+1. **Clona el repositorio** y entra en la carpeta:
    ```bash
    git clone https://github.com/Leo921007/IAfishingDetector.git
    cd IAfishingDetector
-2. Crea y activa un entorno virtual:
-    bash
-    python -m venv venv
-    # Windows:
-    venv\Scripts\activate
-    # Linux/macOS:
-    source venv/bin/activate
-3. Instala dependencias:
+   ```
+2. **Crea y activa un entorno virtual**:
+   ```bash
+   python -m venv venv
+   # Windows:
+   venv\Scripts\activate
+   # Linux/macOS:
+   source venv/bin/activate
+   ```
+3. **Instala las dependencias**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Verifica que `ffmpeg` esté en tu PATH**:
+   ```bash
+   ffmpeg -version
+   ```
 
-    bash
-    pip install -r requirements.txt
-    Verifica que ffmpeg esté en tu PATH:
+---
 
-    bash
-    ffmpeg -version
+## 🎯 Uso
 
-🎯 Uso
-1. Validar sonidos de referencia
+1. **Validar sonidos de referencia**  
+   ```bash
+   python sound_validator.py --input Fishing_1.wav Fishing_2.wav Fishing_3.wav
+   ```
+2. **Normalizar audios**  
+   ```bash
+   python normalize_sounds.py --input Fishing_*.wav --output normalized/
+   ```
+3. **Comparar señal en vivo**  
+   - Dominio tiempo:
+     ```bash
+     python compare_live_sound.py --reference normalized/Fishing_1.wav
+     ```
+   - Dominio frecuencia:
+     ```bash
+     python compare_live_sound_fft.py --reference normalized/Fishing_1.wav
+     ```
+4. **Detectar corcho y clic automático**  
+   ```bash
+   python main.py
+   ```
+5. **Entrenar tu modelo YOLO**  
+   Prepara tu dataset (imágenes + labels) y luego:
+   ```bash
+   python train_yolo.py --data dataset/data.yaml --cfg yolov5s.yaml --epochs 50
+   ```
 
-    bash
+---
 
-    python sound_validator.py --input Fishing_1.wav Fishing_2.wav Fishing_3.wav
-    Normalizar audios
+## 🔧 Configuración
 
-    bash
+- Ajusta umbrales de detección en `detect.py` y `compare_live_sound.py`.  
+- Cambia el modelo o ruta en `train_yolo.py` según tu configuración de YOLOv5.  
 
-    python normalize_sounds.py --input Fishing_*.wav --output normalized/
-    Comparar señal en vivo
+---
 
-2. Dominio tiempo:
+## 📚 Referencias
 
-    bash
+- [YOLOv5](https://github.com/ultralytics/yolov5)  
+- Documentación oficial de `pyaudio`, `opencv-python`, `numpy`, etc.  
 
-    python compare_live_sound.py --reference normalized/Fishing_1.wav
-    Dominio frecuencia:
+---
 
-    bash
+## 📝 Licencia
 
-    python compare_live_sound_fft.py --reference normalized/Fishing_1.wav
-    Detectar corcho y clic automático
-
-    bash
-
-    python main.py
-3. Entrenar tu modelo YOLO
-    Prepara tu dataset (imágenes + labels) y luego:
-
-    bash
-
-    python train_yolo.py --data dataset/data.yaml --cfg yolov5s.yaml --epochs 50
-    🔧 Configuración
-    Ajusta umbrales de detección en detect.py y compare_live_sound.py.
-
-    Cambia el modelo o ruta en train_yolo.py según tu configuración de YOLOv5.
-
-📚 Referencias
-YOLOv5
-
-Documentación oficial de pyaudio, opencv-python, numpy, etc.
-
-📝 Licencia
-Proyecto bajo licencia MIT. Consulta el archivo LICENSE para más detalles.
-"@ > README.md
+Proyecto bajo licencia MIT. Consulta el archivo `LICENSE` para más detalles.
