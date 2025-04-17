@@ -1,0 +1,15 @@
+opencv-python
+torch
+torchvision
+torchaudio
+numpy
+pillow
+matplotlib
+pyautogui
+sounddevice
+scipy
+pydub
+mss
+keyboard
+pandas
+requests

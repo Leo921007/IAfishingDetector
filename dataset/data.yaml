@@ -1,0 +1,5 @@
+train: C:/Users/LEONARDO/Desktop/IAfishingDetector/dataset/images/train
+val: C:/Users/LEONARDO/Desktop/IAfishingDetector/dataset/images/val
+
+nc: 1
+names: ['corcho']
