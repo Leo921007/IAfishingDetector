@@ -18,7 +18,7 @@ roi:
 
 input:
   cast_key: "2"            # tecla que lanza la caña (hechizo Pesca en la barra de acción)
-  loot_button: left        # botón para recoger el corcho
+  loot_button: right       # en WoW el corcho se recoge con CLIC DERECHO
   delay_after_click: 2.0   # segundos tras recoger antes de relanzar
 
 audio:
