@@ -43,3 +43,17 @@ class InputController:
 
     def press_key(self, key: str) -> None:
         self._kb.press_and_release(key)
+
+
+class AudioRecorder:
+    """Graba audio del micrófono con sounddevice. Aísla la captura del match (audio_match)."""
+
+    def __init__(self) -> None:
+        import sounddevice as sd  # import perezoso
+
+        self._sd = sd
+
+    def record(self, duration: float, fs: int) -> np.ndarray:
+        recording = self._sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype="int16")
+        self._sd.wait()
+        return recording
