@@ -1,2 +1,20 @@
 # No versionar tu entorno virtual
 labeling-env/
+
+# Entornos virtuales / caché de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Pesos de modelos y artefactos pesados (no versionar; regenerar con train_corcho.py)
+*.pt
+*.onnx
+yolo11n.pt
+models/
+
+# Salidas de entrenamiento de Ultralytics
+runs/
+
+# Cachés de dataset que regenera Ultralytics
+dataset/labels/*.cache
+*.cache

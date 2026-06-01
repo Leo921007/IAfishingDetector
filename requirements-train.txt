@@ -1,0 +1,15 @@
+# Entorno de entrenamiento — Etapa 2 (Python 3.12, GPU NVIDIA CUDA 12.x)
+# Instalación reproducible dentro de un venv aislado:
+#   python3 -m venv .venv --without-pip
+#   curl -sS https://bootstrap.pypa.io/get-pip.py | .venv/bin/python
+#   .venv/bin/pip install -r requirements-train.txt
+#
+# Las ruedas de PyTorch se toman del índice CUDA 12.4 (compatible con driver 12.x).
+--extra-index-url https://download.pytorch.org/whl/cu124
+
+torch==2.6.0
+torchvision==0.21.0
+ultralytics==8.3.108
+onnx==1.17.0
+onnxruntime==1.20.1
+numpy==2.1.1
