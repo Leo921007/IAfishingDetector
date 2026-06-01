@@ -19,6 +19,9 @@ runs/
 # Salidas de detección por lotes (detect.py)
 detections/
 
+# Logs de ejecución
+logs/
+
 # Cachés de dataset que regenera Ultralytics
 dataset/labels/*.cache
 *.cache

@@ -21,6 +21,13 @@ input:
   loot_button: right       # en WoW el corcho se recoge con CLIC DERECHO
   delay_after_click: 2.0   # segundos tras recoger antes de relanzar
 
+logging:
+  level: INFO              # DEBUG para ver los scores de audio por ciclo
+  dir: logs
+  file: pesca.log
+  max_bytes: 1048576       # 1 MB por archivo
+  backups: 5
+
 audio:
   references: [Fishing_1.wav, Fishing_2.wav, Fishing_3.wav]
   fs: 44100

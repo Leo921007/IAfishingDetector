@@ -52,12 +52,22 @@ class AudioCfg:
 
 
 @dataclass(frozen=True)
+class LoggingCfg:
+    level: str
+    dir: Path
+    file: str
+    max_bytes: int
+    backups: int
+
+
+@dataclass(frozen=True)
 class Config:
     model_onnx: Path
     detector: DetectorCfg
     roi: ROICfg
     input: InputCfg
     audio: AudioCfg
+    logging: LoggingCfg
 
 
 def load_config(path: str | Path | None = None) -> Config:
@@ -68,6 +78,7 @@ def load_config(path: str | Path | None = None) -> Config:
     roi = data["roi"]
     inp = data["input"]
     aud = data["audio"]
+    log = data["logging"]
 
     return Config(
         model_onnx=REPO_ROOT / data["model"]["onnx"],
@@ -90,5 +101,12 @@ def load_config(path: str | Path | None = None) -> Config:
             bandpass=(float(aud["bandpass"][0]), float(aud["bandpass"][1])),
             similarity_threshold=float(aud["similarity_threshold"]),
             listen_window=int(aud["listen_window"]),
+        ),
+        logging=LoggingCfg(
+            level=str(log["level"]),
+            dir=REPO_ROOT / log["dir"],
+            file=str(log["file"]),
+            max_bytes=int(log["max_bytes"]),
+            backups=int(log["backups"]),
         ),
     )
