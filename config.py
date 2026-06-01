@@ -61,6 +61,12 @@ class LoggingCfg:
 
 
 @dataclass(frozen=True)
+class SessionCfg:
+    enabled: bool
+    dir: Path
+
+
+@dataclass(frozen=True)
 class Config:
     model_onnx: Path
     detector: DetectorCfg
@@ -68,6 +74,7 @@ class Config:
     input: InputCfg
     audio: AudioCfg
     logging: LoggingCfg
+    session: SessionCfg
 
 
 def load_config(path: str | Path | None = None) -> Config:
@@ -79,6 +86,7 @@ def load_config(path: str | Path | None = None) -> Config:
     inp = data["input"]
     aud = data["audio"]
     log = data["logging"]
+    ses = data["session"]
 
     return Config(
         model_onnx=REPO_ROOT / data["model"]["onnx"],
@@ -108,5 +116,9 @@ def load_config(path: str | Path | None = None) -> Config:
             file=str(log["file"]),
             max_bytes=int(log["max_bytes"]),
             backups=int(log["backups"]),
+        ),
+        session=SessionCfg(
+            enabled=bool(ses["enabled"]),
+            dir=REPO_ROOT / ses["dir"],
         ),
     )

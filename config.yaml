@@ -21,6 +21,10 @@ input:
   loot_button: right       # en WoW el corcho se recoge con CLIC DERECHO
   delay_after_click: 2.0   # segundos tras recoger antes de relanzar
 
+session:
+  enabled: false           # true (o flag --record) para grabar frames/audio/eventos por ciclo
+  dir: sessions
+
 logging:
   level: INFO              # DEBUG para ver los scores de audio por ciclo
   dir: logs

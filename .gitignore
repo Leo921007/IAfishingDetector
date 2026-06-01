@@ -22,6 +22,9 @@ detections/
 # Logs de ejecución
 logs/
 
+# Sesiones grabadas (frames/audio/eventos)
+sessions/
+
 # Cachés de dataset que regenera Ultralytics
 dataset/labels/*.cache
 *.cache
