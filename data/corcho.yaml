@@ -1,0 +1,11 @@
+# Configuración de datos para el detector de corcho (Etapa 2) — formato Ultralytics.
+# Ruta absoluta para que Ultralytics resuelva el dataset sin depender de datasets_dir.
+# Si mueves el repositorio, actualiza 'path'.
+path: /home/leonardo/projects/IAfishingDetector/dataset
+train: images/train
+val: images/val
+
+# Nota: dataset/data.yaml (legacy, rutas Windows C:/Users/...) queda obsoleto y no se usa.
+nc: 1
+names:
+  0: corcho
