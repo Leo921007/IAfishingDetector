@@ -1,0 +1,31 @@
+# Configuración central del bot de pesca (Etapa 3). Rutas relativas a la raíz del repo.
+
+model:
+  onnx: models/corcho_detector/best.onnx   # runtime de inferencia ONNX
+
+detector:
+  conf_threshold: 0.5      # umbral alto por la tasa de falsos positivos medida en la Etapa 2
+  iou_threshold: 0.45
+  imgsz: 640
+
+# Región de pantalla a capturar, ALINEADA al encuadre de los recortes de entrenamiento
+# (~430x257). Calibrar a tu resolución/UI. (left, top) = esquina superior izquierda en píxeles.
+roi:
+  left: 720
+  top: 400
+  width: 480
+  height: 270
+
+input:
+  cast_key: "2"            # tecla que lanza la caña (hechizo Pesca en la barra de acción)
+  loot_button: left        # botón para recoger el corcho
+  delay_after_click: 2.0   # segundos tras recoger antes de relanzar
+
+audio:
+  references: [Fishing_1.wav, Fishing_2.wav, Fishing_3.wav]
+  fs: 44100
+  duration: 3              # segundos de grabación por intento
+  gain: 6.0
+  bandpass: [300.0, 3000.0]
+  similarity_threshold: 0.5
+  listen_window: 22        # segundos de escucha antes de relanzar la caña
