@@ -13,3 +13,6 @@ ultralytics==8.3.108
 onnx==1.17.0
 onnxruntime==1.20.1
 numpy==2.1.1
+
+# Pruebas (verificación offline del detector — Etapa 3)
+pytest==8.3.4
