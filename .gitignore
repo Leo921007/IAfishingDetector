@@ -5,6 +5,7 @@ labeling-env/
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Pesos de modelos y artefactos pesados (no versionar; regenerar con train_corcho.py)
 *.pt
@@ -14,6 +15,9 @@ models/
 
 # Salidas de entrenamiento de Ultralytics
 runs/
+
+# Salidas de detección por lotes (detect.py)
+detections/
 
 # Cachés de dataset que regenera Ultralytics
 dataset/labels/*.cache

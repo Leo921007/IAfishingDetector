@@ -1,201 +1,111 @@
-import cv2
-import torch
-import numpy as np
-import pyautogui
-import time
-import sounddevice as sd
-from scipy.io.wavfile import write
+"""Loop principal del bot de pesca (Etapa 3).
+
+Reconecta la inferencia al modelo de la Etapa 2 (ONNX) y centraliza la configuración en
+config.yaml. La detección de mordida por audio (FFT) se conserva tal cual de la versión
+original; solo se parametriza desde la config.
+
+Nota: este loop es el punto de entrada en vivo y depende de mss/pyautogui/keyboard/
+sounddevice (equipo de juego, Windows). La RUTA DE DETECCIÓN (corcho_detector) es
+independiente y testeable en WSL2 (ver detect_offline.py).
+"""
 import os
-import mss
-import keyboard
+import time
+
+import numpy as np
+import sounddevice as sd
 from pydub import AudioSegment
-from scipy.signal import correlate
-from tkinter import Tk, Canvas
+from scipy.io.wavfile import write
 from scipy.signal import butter, lfilter
 
-# Configuración del modelo
-MODEL_PATH = 'yolov5/runs/train/corcho-detector3/weights/best.pt'
-CONFIDENCE_THRESHOLD = 0.25
-# Lista de archivos de sonido de referencia en formato WAV
-SOUND_REFERENCES = ['Fishing_1.wav', 'Fishing_2.wav', 'Fishing_3.wav']
-DELAY_AFTER_CLICK = 2  # segundos
+from config import load_config
+from corcho_detector import CorchoDetector
+from platform_io import InputController, ScreenCapturer
 
-# --- Función para amplificar ganancia ---
+CFG = load_config()
+
+
+# --- Audio: amplificar ganancia (conservado de la versión original) ---
 def aplicar_ganancia(audio_array, ganancia=4.0):
     audio_float = audio_array.astype(np.float32)
     amplificado = audio_float * ganancia
-    amplificado = np.clip(amplificado, -32768, 32767)  # Limitar para evitar saturación
+    amplificado = np.clip(amplificado, -32768, 32767)
     return amplificado.astype(np.int16)
 
-# --- Filtro pasa banda (Filtro Butterworth) ---
+
+# --- Audio: filtro Butterworth pasa banda (conservado) ---
 def bandpass_filter(signal, fs, lowcut=300.0, highcut=3000.0, order=4):
-    """
-    Aplica un filtro Butterworth pasa banda a la señal.
-    
-    Parámetros:
-      - signal: La señal de entrada (array de numpy).
-      - fs: Frecuencia de muestreo (Hz).
-      - lowcut: Frecuencia baja de corte.
-      - highcut: Frecuencia alta de corte.
-      - order: Orden del filtro.
-      
-    Retorna:
-      - La señal filtrada.
-    """
     nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    y = lfilter(b, a, signal)
-    return y
+    b, a = butter(order, [lowcut / nyq, highcut / nyq], btype="band")
+    return lfilter(b, a, signal)
 
-# --- Selección de región de pantalla ---
-def select_screen_region():
-    root = Tk()
-    root.attributes('-fullscreen', True)
-    root.attributes('-alpha', 0.3)
-    canvas = Canvas(root, cursor="cross", bg='black')
-    canvas.pack(fill="both", expand=True)
-    
-    region = {}
-    rect = None
 
-    def on_click(event):
-        region["x1"] = event.x
-        region["y1"] = event.y
-
-    def on_drag(event):
-        nonlocal rect
-        if rect:
-            canvas.delete(rect)
-        rect = canvas.create_rectangle(region["x1"], region["y1"], event.x, event.y, outline='red')
-
-    def on_release(event):
-        region["x2"] = event.x
-        region["y2"] = event.y
-        root.quit()
-
-    canvas.bind("<ButtonPress-1>", on_click)
-    canvas.bind("<B1-Motion>", on_drag)
-    canvas.bind("<ButtonRelease-1>", on_release)
-
-    root.mainloop()
-    root.destroy()
-
-    x = min(region["x1"], region["x2"])
-    y = min(region["y1"], region["y2"])
-    w = abs(region["x1"] - region["x2"])
-    h = abs(region["y1"] - region["y2"])
-    return {"top": y, "left": x, "width": w, "height": h}
-
-# --- Captura de pantalla ---
-def capture_screen(region):
-    with mss.mss() as sct:
-        img = sct.grab(region)
-        return np.array(img)
-
-# --- Función para convertir audio a vector normalizado ---
+# --- Audio: convertir a vector mono normalizado (conservado) ---
 def audio_to_np_mono(audio_path, target_fs):
     audio = AudioSegment.from_file(audio_path)
-    audio = audio.set_frame_rate(target_fs).set_channels(1).set_sample_width(2)  # mono, 16-bit
+    audio = audio.set_frame_rate(target_fs).set_channels(1).set_sample_width(2)
     samples = np.array(audio.get_array_of_samples()).astype(np.float32)
     norm = np.max(np.abs(samples))
     if norm == 0:
         return samples
     return samples / norm
 
-# --- Comparar sonido grabado con los de referencia usando correlación ---
-def detect_fishing_sound(duration=3, fs=44100, ganancia=6.0, similarity_threshold=0.5):
+
+# --- Audio: detectar el sonido de pesca por similitud FFT (conservado, parametrizado) ---
+def detect_fishing_sound(audio_cfg):
     print("🎧 Escuchando...")
-    # Grabación en tiempo real
-    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
+    fs = audio_cfg.fs
+    lowcut, highcut = audio_cfg.bandpass
+    recording = sd.rec(int(audio_cfg.duration * fs), samplerate=fs, channels=1, dtype="int16")
     sd.wait()
-    
-    # Aplicar ganancia
-    recording_amplificado = aplicar_ganancia(recording, ganancia=ganancia)
+
+    recording_amplificado = aplicar_ganancia(recording, ganancia=audio_cfg.gain)
     temp_file = "temp_audio.wav"
     write(temp_file, fs, recording_amplificado)
-    
-    # Convertir a vector normalizado
     recorded_np = audio_to_np_mono(temp_file, fs)
-    
-    # Aislar la banda de interés (por ejemplo 300 Hz a 3000 Hz)
-    recorded_np_filtrado = bandpass_filter(recorded_np, fs, lowcut=300.0, highcut=3000.0, order=4)
-    
+    recorded_np = bandpass_filter(recorded_np, fs, lowcut=lowcut, highcut=highcut, order=4)
     os.remove(temp_file)
-    
-    # Calcular la FFT de la señal filtrada
-    fft_recorded = np.fft.rfft(recorded_np_filtrado)
-    fft_recorded_mag = np.abs(fft_recorded)
-    if np.max(fft_recorded_mag) == 0:
-        fft_recorded_mag_norm = fft_recorded_mag
-    else:
-        fft_recorded_mag_norm = fft_recorded_mag / np.max(fft_recorded_mag)
-    
-    match_found = False
-    # Comparar contra cada sonido de referencia
-    for ref_path in SOUND_REFERENCES:
+
+    fft_recorded_mag = np.abs(np.fft.rfft(recorded_np))
+    peak = np.max(fft_recorded_mag)
+    fft_recorded_mag_norm = fft_recorded_mag / peak if peak else fft_recorded_mag
+
+    for ref_path in audio_cfg.references:
         ref_np = audio_to_np_mono(ref_path, fs)
-        ref_np_filtrado = bandpass_filter(ref_np, fs, lowcut=300.0, highcut=3000.0, order=4)
-        fft_ref = np.fft.rfft(ref_np_filtrado)
-        fft_ref_mag = np.abs(fft_ref)
-        if np.max(fft_ref_mag) == 0:
-            fft_ref_mag_norm = fft_ref_mag
-        else:
-            fft_ref_mag_norm = fft_ref_mag / np.max(fft_ref_mag)
-        
-        # Igualar longitudes
+        ref_np = bandpass_filter(ref_np, fs, lowcut=lowcut, highcut=highcut, order=4)
+        fft_ref_mag = np.abs(np.fft.rfft(ref_np))
+        ref_peak = np.max(fft_ref_mag)
+        fft_ref_mag_norm = fft_ref_mag / ref_peak if ref_peak else fft_ref_mag
+
         min_len = min(len(fft_recorded_mag_norm), len(fft_ref_mag_norm))
         rec_vec = fft_recorded_mag_norm[:min_len]
         ref_vec = fft_ref_mag_norm[:min_len]
-        
-        # Calcular similitud coseno
-        similarity = np.dot(rec_vec, ref_vec) / (np.linalg.norm(rec_vec) * np.linalg.norm(ref_vec) + 1e-10)
-        print(f"🔍 Comparando con {ref_path}: Cosine Similarity = {similarity:.4f}")
-        if similarity > similarity_threshold:
-            print(f"✅ Coincidencia detectada con {ref_path}")
-            match_found = True
-            break
-    
-    return match_found
+        similarity = np.dot(rec_vec, ref_vec) / (
+            np.linalg.norm(rec_vec) * np.linalg.norm(ref_vec) + 1e-10
+        )
+        print(f"🔍 {os.path.basename(str(ref_path))}: Cosine Similarity = {similarity:.4f}")
+        if similarity > audio_cfg.similarity_threshold:
+            print(f"✅ Coincidencia detectada con {os.path.basename(str(ref_path))}")
+            return True
+    return False
 
-# --- Inference con YOLOv5 ---
-def detect_corcho(image, model):
-    img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = model(img)
-    detections = results.xyxy[0].cpu().numpy()
 
-    corchos = [d for d in detections if d[4] >= CONFIDENCE_THRESHOLD]
-    if not corchos:
-        return None
-
-    # Devolver el corcho con mayor confianza
-    best = max(corchos, key=lambda x: x[4])
-    x_center = int((best[0] + best[2]) / 2)
-    y_center = int((best[1] + best[3]) / 2)
-    return (x_center, y_center)
-
-# --- Automatización: mover el mouse y presionar tecla ---
-def click_and_press(x, y):
-    pyautogui.moveTo(x, y)
-    pyautogui.click()
-    time.sleep(DELAY_AFTER_CLICK)
-    keyboard.press_and_release('2')
-
-# --- Main ---
+# --- Loop principal ---
 def main():
-    print("Selecciona la región donde aparece el corcho en el juego.")
-    region = select_screen_region()
-    print(f"Región seleccionada: {region}")
+    print("Cargando detector de corcho (ONNX)...")
+    detector = CorchoDetector(
+        CFG.model_onnx,
+        conf_threshold=CFG.detector.conf_threshold,
+        iou_threshold=CFG.detector.iou_threshold,
+        imgsz=CFG.detector.imgsz,
+    )
+    capturer = ScreenCapturer()
+    inputc = InputController()
+    roi = CFG.roi
 
-    print("Cargando modelo YOLOv5...")
-    model = torch.hub.load('yolov5', 'custom', path=MODEL_PATH, source='local')
-    model.conf = CONFIDENCE_THRESHOLD
-
-    # Presionar la tecla '2' para iniciar la pesca
-    print("Iniciando pesca, presionando la tecla '2'...")
-    keyboard.press_and_release('2')
-    time.sleep(1)  # Pequeña pausa para asegurarse de que la acción se registre
+    print(f"ROI configurada: {roi.as_mss()}")
+    print(f"Iniciando pesca, pulsando la tecla '{CFG.input.cast_key}'...")
+    inputc.press_key(CFG.input.cast_key)
+    time.sleep(1)
 
     print("Esperando sonido de pesca (Ctrl+C para salir)...")
     try:
@@ -203,30 +113,31 @@ def main():
             inicio = time.time()
             sonido_detectado = False
 
-            # Intentar detectar el sonido durante 22 segundos
-            while time.time() - inicio < 22:
-                if detect_fishing_sound():
+            while time.time() - inicio < CFG.audio.listen_window:
+                if detect_fishing_sound(CFG.audio):
                     sonido_detectado = True
                     print("🎣 Sonido detectado, buscando corcho...")
-                    frame = capture_screen(region)
-                    coords = detect_corcho(frame, model)
-                    if coords:
-                        x_abs = region["left"] + coords[0]
-                        y_abs = region["top"] + coords[1]
-                        print(f"🟢 Corcho detectado en ({x_abs}, {y_abs}) - Haciendo clic")
-                        click_and_press(x_abs, y_abs)
+                    frame = capturer.grab(roi.as_mss())
+                    center = detector.best_center(frame)
+                    if center is not None:
+                        x_abs = roi.left + center[0]
+                        y_abs = roi.top + center[1]
+                        print(f"🟢 Corcho en ({x_abs}, {y_abs}) - recogiendo")
+                        inputc.move_and_click(x_abs, y_abs, button=CFG.input.loot_button)
+                        time.sleep(CFG.input.delay_after_click)
+                        inputc.press_key(CFG.input.cast_key)
                     else:
                         print("❌ Corcho no detectado")
-                    break  # Salir del ciclo de 22s si ya detectó
-                else:
-                    time.sleep(0.5)  # Esperar un poco antes de volver a escuchar
+                    break
+                time.sleep(0.5)
 
             if not sonido_detectado:
-                print("⏳ No se detectó sonido en 22s, presionando tecla '2'...")
-                keyboard.press_and_release('2')
-                time.sleep(DELAY_AFTER_CLICK)  # Esperar después de presionar
+                print(f"⏳ Sin sonido en {CFG.audio.listen_window}s, relanzando...")
+                inputc.press_key(CFG.input.cast_key)
+                time.sleep(CFG.input.delay_after_click)
     except KeyboardInterrupt:
         print("\nFinalizado por el usuario.")
+
 
 if __name__ == "__main__":
     main()
