@@ -33,8 +33,11 @@ Por eso el loop (`main.LootLoop.run`):
 - **Watchdog:** si LOCATE no encuentra corcho, o se pierde en una re-localización, o pasa
   `max_wait_seconds` sin mordida → **recast**. Aviso (`WARNING`) tras N recasts seguidos sin corcho
   (deriva de cámara).
-- **Parkeo:** el cursor se mueve a `mouse_park` (fuera de la ROI) tras cada loot y cada recast. El clic de
-  loot es press+release sin arrastre (no rota la cámara).
+- **Parkeo:** el cursor se mueve a `mouse_park` (fuera de la ROI) tras cada loot y cada recast.
+- **Clic de loot (timing, 8C-fix2):** `moveTo → move_settle → mouseDown → click_hold → mouseUp` (no
+  instantáneo: WoW/DirectInput necesita registrar el cursor sobre el corcho); tras el clic se espera
+  `loot_settle` ANTES de parkear, para que el loot se procese con el cursor todavía sobre el corcho. Sin
+  arrastre intermedio (no rota la cámara). Afinar `move_settle`/`click_hold`/`loot_settle` en vivo.
 
 ## 4. Config nueva (`config.yaml: bite`) — afinar EN VIVO
 
