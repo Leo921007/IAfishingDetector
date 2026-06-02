@@ -38,8 +38,14 @@ class InputController:
         self._pg.FAILSAFE = True
 
     def move_and_click(self, x: int, y: int, button: str = "left") -> None:
+        # moveTo es instantáneo (duration=0) y click() es press+release en el sitio, SIN
+        # movimiento intermedio: un right-click así NO arrastra ni rota la cámara en WoW.
         self._pg.moveTo(x, y)
         self._pg.click(button=button)
+
+    def park(self, x: int, y: int) -> None:
+        """Mueve el cursor a un punto (sin clic): para apartarlo de la ROI tras loot/recast."""
+        self._pg.moveTo(x, y)
 
     def press_key(self, key: str) -> None:
         self._kb.press_and_release(key)
