@@ -14,6 +14,7 @@ bite:                      # trigger visual de la mordida por SPLASH (foam). Afi
   poll_fps: 30             # tasa de sondeo del foam (8B: separable hasta ~24 fps)
   relocate_seconds: 0.5    # cada cuánto re-localizar el corcho con YOLO (entre medias solo foam)
   max_wait_seconds: 25     # safety: sin mordida en este tiempo -> recast igual
+  locate_timeout: 3.0      # segundos esperando a que aparezca el corcho tras castear antes de recastear
 
 # Región de pantalla a capturar. Anclada a la sesión real 20260601_222727 (Etapa 6A):
 # las dimensiones (748x387) = tamaño de los frames grabados; left/top derivados de los eventos

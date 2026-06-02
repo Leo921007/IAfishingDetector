@@ -25,6 +25,7 @@ CFG = load_config()
 
 CAST_SETTLE = 0.3   # s tras castear antes de parkear el cursor
 SESSION_FS = 44100  # fs nominal para SessionRecorder (sin audio: no se usa)
+LOCATE_FPS = 8      # tasa modesta del sondeo del LOCATE mientras aparece el corcho
 
 
 def decide(has_corcho: bool, bite: bool) -> str:
@@ -82,6 +83,27 @@ class LootLoop:
         self.cast_and_park()
         self.bite.reset()
 
+    def locate(self, ciclo):
+        """Espera a que aparezca el corcho tras castear (en WoW tarda ~1-1.5 s).
+
+        Sondea grab+detect hasta locate_timeout (a LOCATE_FPS) y devuelve (best|None, último frame).
+        NO recastea en el primer detect vacío (eso causaba auto-interrupción del casteo); el recast lo
+        decide run() solo al expirar. La terminación es por conteo de intentos -> determinista en tests.
+        """
+        interval = 1.0 / LOCATE_FPS
+        attempts = max(1, round(self.cfg.bite.locate_timeout * LOCATE_FPS))
+        frame = None
+        for _ in range(attempts):
+            t = time.monotonic()
+            frame = self.capturer.grab(self.roi.as_mss())
+            dets = self.detector.detect(frame)
+            if dets:
+                return max(dets, key=lambda d: d.conf), frame
+            slept = interval - (time.monotonic() - t)
+            if slept > 0:
+                time.sleep(slept)
+        return None, frame
+
     def _record(self, ciclo, frame, detection, outcome, action):
         self.session.record_cycle(
             ciclo, frame_bgr=frame, audio_int16=None,
@@ -100,14 +122,12 @@ class LootLoop:
         ciclo = 0
         while True:
             ciclo += 1
-            # --- LOCATE: ubicar el corcho con el detector ---
-            frame = self.capturer.grab(self.roi.as_mss())
-            dets = self.detector.detect(frame)
-            if not dets:
-                self.do_recast(ciclo, "sin corcho en la ROI")
+            # --- LOCATE: esperar a que el corcho aparezca tras castear (hasta locate_timeout) ---
+            best, frame = self.locate(ciclo)
+            if best is None:
+                self.do_recast(ciclo, "sin corcho tras esperar")
                 self._record(ciclo, frame, None, "recast_sin_corcho", "recast")
                 continue
-            best = max(dets, key=lambda d: d.conf)
             bbox = (best.x1, best.y1, best.x2, best.y2)
             self.bite.reset()
             self.consecutive_recasts = 0

@@ -40,6 +40,19 @@ class FakeDetector:
         return list(self.dets)
 
 
+class SeqDetector:
+    """Devuelve cada respuesta de la lista por llamada; repite la última al agotarse."""
+
+    def __init__(self, responses):
+        self.responses = [list(r) for r in responses]
+        self.calls = 0
+
+    def detect(self, frame):
+        r = self.responses[min(self.calls, len(self.responses) - 1)]
+        self.calls += 1
+        return list(r)
+
+
 class FakeLog:
     def __init__(self):
         self.warnings = []
@@ -71,8 +84,44 @@ def _loop(dets=None):
     return loop, inp, log
 
 
+def _loop_seq(responses):
+    inp = FakeInput()
+    log = FakeLog()
+    loop = main.LootLoop(
+        CFG, log, SeqDetector(responses), FakeCapturer(), inp,
+        session=SessionRecorder(CFG.session.dir, enabled=False, fs=44100),
+        bite=FoamBiteDetector(CFG.bite.foam_threshold, CFG.bite.foam_min_frames),
+        grabber=None,
+    )
+    return loop, inp
+
+
 def _det():
     return Detection(x1=10, y1=10, x2=20, y2=20, conf=0.9)
+
+
+def test_locate_encuentra_tras_intentos_no_recasta():
+    loop, inp = _loop_seq([[], [], [_det()]])  # aparece al 3er intento
+    best, _ = loop.locate(1)
+    assert best is not None
+    assert inp.casts == 0  # locate no recastea
+
+
+def test_locate_timeout_devuelve_none():
+    loop, inp = _loop_seq([[]])  # nunca aparece
+    best, _ = loop.locate(1)
+    assert best is None
+    # acotado: ~locate_timeout * LOCATE_FPS intentos
+    assert loop.detector.calls == max(1, round(CFG.bite.locate_timeout * main.LOCATE_FPS))
+
+
+def test_locate_none_dispara_recast():
+    loop, inp = _loop_seq([[]])
+    best, _ = loop.locate(1)
+    assert best is None
+    loop.do_recast(1, "sin corcho tras esperar")
+    assert inp.casts == 1
+    assert loop.consecutive_recasts == 1
 
 
 def test_decide():

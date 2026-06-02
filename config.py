@@ -50,6 +50,7 @@ class BiteCfg:
     poll_fps: float
     relocate_seconds: float
     max_wait_seconds: float
+    locate_timeout: float
 
 
 @dataclass(frozen=True)
@@ -110,6 +111,7 @@ def load_config(path: str | Path | None = None) -> Config:
             poll_fps=float(data.get("bite", {}).get("poll_fps", 30)),
             relocate_seconds=float(data.get("bite", {}).get("relocate_seconds", 0.5)),
             max_wait_seconds=float(data.get("bite", {}).get("max_wait_seconds", 25)),
+            locate_timeout=float(data.get("bite", {}).get("locate_timeout", 3.0)),
         ),
         input=InputCfg(
             cast_key=str(inp["cast_key"]),
