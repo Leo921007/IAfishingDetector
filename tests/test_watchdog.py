@@ -1,8 +1,9 @@
-"""Pruebas de la lógica del watchdog y el parkeo (headless, con adaptadores fake)."""
+"""Pruebas de la lógica del watchdog, parkeo y decisión visual (headless, adaptadores fake)."""
 import numpy as np
 import pytest
 
 import main
+from bite_trigger import FoamBiteDetector
 from config import load_config
 from corcho_detector import Detection
 from session import SessionRecorder
@@ -58,12 +59,13 @@ def _no_sleep(monkeypatch):
     monkeypatch.setattr(main.time, "sleep", lambda *a, **k: None)
 
 
-def _loop(dets):
+def _loop(dets=None):
     inp = FakeInput()
     log = FakeLog()
     loop = main.LootLoop(
-        CFG, log, FakeDetector(dets), FakeCapturer(), inp,
-        recorder=None, session=SessionRecorder(CFG.session.dir, enabled=False, fs=CFG.audio.fs),
+        CFG, log, FakeDetector(dets or []), FakeCapturer(), inp,
+        session=SessionRecorder(CFG.session.dir, enabled=False, fs=44100),
+        bite=FoamBiteDetector(CFG.bite.foam_threshold, CFG.bite.foam_min_frames),
         grabber=None,
     )
     return loop, inp, log
@@ -80,45 +82,35 @@ def test_decide():
     assert main.decide(True, False) == "wait"
 
 
-def test_tick_sin_corcho_recasta_y_parkea():
-    loop, inp, _ = _loop([])
-    action, outcome = loop.tick(1, matched=True, recording=None, scores={})
-    assert action == "recast"
-    assert inp.casts == 1          # recast
-    assert inp.parks               # parkeó
-    assert inp.clicks == []        # no hubo loot
+def test_do_recast_incrementa_y_parkea():
+    loop, inp, _ = _loop()
+    loop.do_recast(1, "sin corcho")
+    assert inp.casts == 1
+    assert inp.parks
     assert loop.consecutive_recasts == 1
 
 
-def test_tick_loot_y_parkea():
-    loop, inp, _ = _loop([_det()])
-    action, outcome = loop.tick(1, matched=True, recording=None, scores={})
-    assert action == "loot" and outcome == "recogido"
-    assert len(inp.clicks) == 1                     # un clic de loot
+def test_do_loot_clic_park_recast():
+    loop, inp, _ = _loop()
+    loop.consecutive_recasts = 3
+    loop.do_loot(1, _det())
+    assert len(inp.clicks) == 1
     assert inp.clicks[0][2] == CFG.input.loot_button
-    assert inp.casts == 1                           # recast tras loot
-    assert len(inp.parks) >= 2                      # park tras loot y tras recast
+    assert inp.casts == 1          # recast tras loot
+    assert len(inp.parks) >= 2     # park tras loot y tras recast
     assert loop.consecutive_recasts == 0
 
 
-def test_tick_wait_no_recasta():
-    loop, inp, _ = _loop([_det()])
-    loop.last_cast = main.time.monotonic()          # cast reciente -> sin safety timeout
-    action, outcome = loop.tick(1, matched=False, recording=None, scores={})
-    assert action == "wait" and outcome == "esperando"
-    assert inp.casts == 0 and inp.clicks == []
-
-
 def test_warning_tras_n_recasts():
-    loop, inp, log = _loop([])
+    loop, inp, log = _loop()
     for c in range(CFG.input.watchdog_warn_after):
-        loop.tick(c + 1, matched=False, recording=None, scores={})
+        loop.do_recast(c + 1, "sin corcho")
     assert loop.consecutive_recasts == CFG.input.watchdog_warn_after
-    assert log.warnings, "debería avisar tras N recasts seguidos sin corcho"
+    assert log.warnings
 
 
 def test_mouse_park_fuera_de_la_roi():
     r = CFG.roi
     px, py = CFG.input.mouse_park
     fuera = px < r.left or px > r.left + r.width or py < r.top or py > r.top + r.height
-    assert fuera, "mouse_park debe quedar fuera de la ROI"
+    assert fuera

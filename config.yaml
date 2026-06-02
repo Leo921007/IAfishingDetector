@@ -8,6 +8,13 @@ detector:
   iou_threshold: 0.45
   imgsz: 640
 
+bite:                      # trigger visual de la mordida por SPLASH (foam). Afinar EN VIVO.
+  foam_threshold: 0.005    # fracción de píxeles casi-blancos en el parche (8B: flote~0, mordida 0.003-0.074)
+  foam_min_frames: 2       # frames consecutivos sobre el umbral para disparar
+  poll_fps: 30             # tasa de sondeo del foam (8B: separable hasta ~24 fps)
+  relocate_seconds: 0.5    # cada cuánto re-localizar el corcho con YOLO (entre medias solo foam)
+  max_wait_seconds: 25     # safety: sin mordida en este tiempo -> recast igual
+
 # Región de pantalla a capturar. Anclada a la sesión real 20260601_222727 (Etapa 6A):
 # las dimensiones (748x387) = tamaño de los frames grabados; left/top derivados de los eventos
 # (click - centro_bbox, unánime). Define la escala del corcho para captura/entrenamiento/inferencia.

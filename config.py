@@ -44,6 +44,15 @@ class InputCfg:
 
 
 @dataclass(frozen=True)
+class BiteCfg:
+    foam_threshold: float
+    foam_min_frames: int
+    poll_fps: float
+    relocate_seconds: float
+    max_wait_seconds: float
+
+
+@dataclass(frozen=True)
 class AudioCfg:
     references: List[Path]
     fs: int
@@ -83,6 +92,7 @@ class Config:
     detector: DetectorCfg
     roi: ROICfg
     input: InputCfg
+    bite: BiteCfg
     audio: AudioCfg
     logging: LoggingCfg
     session: SessionCfg
@@ -107,6 +117,13 @@ def load_config(path: str | Path | None = None) -> Config:
             imgsz=int(det["imgsz"]),
         ),
         roi=ROICfg(int(roi["left"]), int(roi["top"]), int(roi["width"]), int(roi["height"])),
+        bite=BiteCfg(
+            foam_threshold=float(data.get("bite", {}).get("foam_threshold", 0.005)),
+            foam_min_frames=int(data.get("bite", {}).get("foam_min_frames", 2)),
+            poll_fps=float(data.get("bite", {}).get("poll_fps", 30)),
+            relocate_seconds=float(data.get("bite", {}).get("relocate_seconds", 0.5)),
+            max_wait_seconds=float(data.get("bite", {}).get("max_wait_seconds", 25)),
+        ),
         input=InputCfg(
             cast_key=str(inp["cast_key"]),
             loot_button=str(inp["loot_button"]),
