@@ -25,7 +25,9 @@ Por eso el loop (`main.LootLoop.run`):
   `bite.locate_timeout` (~3 s; en WoW el corcho tarda ~1-1.5 s). Solo recastea si expira sin corcho — así
   no se auto-interrumpe el casteo. Devuelve el bbox → parche.
 - **POLL:** samplea el foam a `poll_fps` sobre ese parche; **re-localiza** con YOLO cada `relocate_seconds`
-  (el corcho deriva despacio) y confirma que sigue presente.
+  (el corcho deriva despacio). El detector corre a `conf 0.25` (el modelo nuevo no da FP a ese umbral) y el
+  relocate **tolera hasta `relocate_tolerance` (3) fallos seguidos** antes de declarar "corcho perdido": un
+  frame flaco del detector **no abandona el casteo** (se mantiene el último bbox y se sigue sondeando foam).
 - Al disparar el foam → **loot** (clic derecho en el centro del corcho) → **park** → **recast**.
 
 ## 3. Watchdog y parkeo (conservados de la Etapa 7)
