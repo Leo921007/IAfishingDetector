@@ -36,7 +36,10 @@ audio:
   references: [Fishing_1.wav, Fishing_2.wav, Fishing_3.wav]
   fs: 44100
   duration: 3              # segundos de grabación por intento
-  gain: 6.0
+  gain: 6.0                # no usado por el discriminador NCC-envolvente (invariante a escala)
   bandpass: [300.0, 3000.0]
-  similarity_threshold: 0.5
+  # Umbral del NCC de envolvente (audio_match). Calibrado con bench_audio.py:
+  # negativos (ruido) <= ~0.07, positivos genuinos >= ~0.51 -> 0.30 deja margen a ambos lados.
+  # OJO: provisional con negativos sintéticos; revisar con clips de gameplay reales.
+  similarity_threshold: 0.30
   listen_window: 22        # segundos de escucha antes de relanzar la caña
