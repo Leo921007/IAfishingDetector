@@ -38,6 +38,9 @@ class InputCfg:
     cast_key: str
     loot_button: str
     delay_after_click: float
+    watchdog_interval: float
+    watchdog_warn_after: int
+    mouse_park: Tuple[int, int]
 
 
 @dataclass(frozen=True)
@@ -108,6 +111,10 @@ def load_config(path: str | Path | None = None) -> Config:
             cast_key=str(inp["cast_key"]),
             loot_button=str(inp["loot_button"]),
             delay_after_click=float(inp["delay_after_click"]),
+            watchdog_interval=float(inp.get("watchdog_interval", 3.0)),
+            watchdog_warn_after=int(inp.get("watchdog_warn_after", 5)),
+            mouse_park=(int(inp.get("mouse_park", {}).get("x", 300)),
+                        int(inp.get("mouse_park", {}).get("y", 700))),
         ),
         audio=AudioCfg(
             references=[REPO_ROOT / r for r in aud["references"]],
