@@ -1,0 +1,7 @@
+# ROI de captura para la ubicación 'stormwind' (canal/agua de Ventormenta).
+# (left, top) = esquina superior izquierda en píxeles de pantalla; width x height = tamaño.
+# Derivada de la sesión real 20260601_222727 (frames 748x387 + click - centro_bbox).
+left: 586
+top: 126
+width: 748
+height: 387

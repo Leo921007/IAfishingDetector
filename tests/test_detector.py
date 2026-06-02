@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from config import load_config
+
 REPO = Path(__file__).resolve().parents[1]
-MODEL = REPO / "models" / "corcho_detector" / "best.onnx"
+MODEL = load_config().model_onnx  # ruta resuelta por detector_mode/location
 VAL_DIR = REPO / "dataset" / "images" / "val"
 
 needs_model = pytest.mark.skipif(

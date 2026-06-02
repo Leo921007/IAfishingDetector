@@ -11,7 +11,12 @@ __pycache__/
 *.pt
 *.onnx
 yolo11n.pt
-models/
+
+# Modelos y datasets POR UBICACIÓN (gitignored; se rastrean roi.yaml/NOTES.md/.gitkeep/README.md)
+locations/*/detector.onnx
+locations/*/detector.pt
+locations/*/dataset/
+models/general/*.onnx
 
 # Salidas de entrenamiento de Ultralytics
 runs/

@@ -1,5 +1,10 @@
 # IAfishingDetector
 
+> **Estructura por ubicaciones (Etapa 9A):** cada lugar de pesca tiene su modelo y su ROI en
+> `locations/<ubicación>/` (modelo `.onnx` gitignored, `roi.yaml`/`NOTES.md` versionados). El modelo se
+> elige en `config.yaml` con `detector_mode` (general|specific) y `location`. Ver **`locations/README.md`**.
+> El bot es 100% visual (trigger por foam); el audio fue eliminado del loop en la Etapa 8C.
+
 Un proyecto de detección y automatización para la pesca en World of Warcraft 4.3.4.  
 Combina reconocimiento de audio y visión por computadora (YOLOv5) para:  
 - Detectar el sonido de la caña al pescar.  

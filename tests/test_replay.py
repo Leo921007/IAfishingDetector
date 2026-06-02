@@ -4,8 +4,10 @@ from pathlib import Path
 
 import pytest
 
+from config import load_config
+
 REPO = Path(__file__).resolve().parents[1]
-MODEL = REPO / "models" / "corcho_detector" / "best.onnx"
+MODEL = load_config().model_onnx  # ruta resuelta por detector_mode/location
 
 needs_model = pytest.mark.skipif(not MODEL.exists(), reason="modelo ONNX ausente (gitignored)")
 

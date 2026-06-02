@@ -189,7 +189,15 @@ def main():
     args = parser.parse_args()
 
     log = setup_logging(CFG.logging, level_override=args.log_level)
-    log.info("Cargando detector ONNX: %s", CFG.model_onnx)
+    log.info("Detector: modo=%s ubicación=%s -> %s", CFG.detector_mode, CFG.location, CFG.model_onnx)
+    if not CFG.model_onnx.exists():
+        log.error("No existe el modelo: %s", CFG.model_onnx)
+        raise SystemExit(
+            f"No existe el modelo para detector_mode='{CFG.detector_mode}' location='{CFG.location}':\n"
+            f"  {CFG.model_onnx}\n"
+            "Coloca ahí el .onnx (gitignored) o entrena la ubicación; o cambia detector_mode/location "
+            "en config.yaml. Ver locations/README.md."
+        )
     detector = CorchoDetector(
         CFG.model_onnx,
         conf_threshold=CFG.detector.conf_threshold,

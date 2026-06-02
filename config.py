@@ -82,6 +82,8 @@ class SessionCfg:
 
 @dataclass(frozen=True)
 class Config:
+    detector_mode: str
+    location: str
     model_onnx: Path
     detector: DetectorCfg
     roi: ROICfg
@@ -91,24 +93,50 @@ class Config:
     session: SessionCfg
 
 
+def resolve_model_path(detector_mode: str, location: str, root: Path = REPO_ROOT) -> Path:
+    """Ruta del modelo según el modo: general -> models/general; specific -> locations/<location>.
+
+    No comprueba existencia (para no romper imports/tests en un checkout sin el .onnx); el error
+    accionable se da al cargar el detector (CorchoDetector / main).
+    """
+    if detector_mode == "general":
+        return root / "models" / "general" / "detector.onnx"
+    return root / "locations" / location / "detector.onnx"
+
+
+def load_roi(location: str, root: Path = REPO_ROOT) -> ROICfg:
+    """Carga la ROI de la ubicación desde locations/<location>/roi.yaml. Error claro si falta."""
+    p = root / "locations" / location / "roi.yaml"
+    if not p.exists():
+        raise FileNotFoundError(
+            f"Falta la ROI de la ubicación '{location}': {p}. "
+            "Crea ese roi.yaml (left/top/width/height) o corrige 'location' en config.yaml."
+        )
+    d = yaml.safe_load(p.read_text(encoding="utf-8"))
+    return ROICfg(int(d["left"]), int(d["top"]), int(d["width"]), int(d["height"]))
+
+
 def load_config(path: str | Path | None = None) -> Config:
     cfg_path = Path(path) if path is not None else REPO_ROOT / "config.yaml"
     data = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
 
     det = data["detector"]
-    roi = data["roi"]
     inp = data["input"]
     log = data["logging"]
     ses = data["session"]
+    detector_mode = str(data.get("detector_mode", "specific"))
+    location = str(data.get("location", "stormwind"))
 
     return Config(
-        model_onnx=REPO_ROOT / data["model"]["onnx"],
+        detector_mode=detector_mode,
+        location=location,
+        model_onnx=resolve_model_path(detector_mode, location),
         detector=DetectorCfg(
             conf_threshold=float(det["conf_threshold"]),
             iou_threshold=float(det["iou_threshold"]),
             imgsz=int(det["imgsz"]),
         ),
-        roi=ROICfg(int(roi["left"]), int(roi["top"]), int(roi["width"]), int(roi["height"])),
+        roi=load_roi(location),
         bite=BiteCfg(
             foam_threshold=float(data.get("bite", {}).get("foam_threshold", 0.005)),
             foam_min_frames=int(data.get("bite", {}).get("foam_min_frames", 2)),
