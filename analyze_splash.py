@@ -32,12 +32,12 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from config import REPO_ROOT
 from corcho_detector import CorchoDetector
+from splash import PATCH_SCALE, foam_value, patch_box  # fuente única (vivo == offline)
 
 ROOT = REPO_ROOT / "captures_bite"
 OUT = ROOT / "analysis"
 MODEL = REPO_ROOT / "models" / "corcho_detector" / "best_zona.onnx"
 DIFF_K = 1
-PATCH_SCALE = 1.5
 REACTION_S = 0.4  # lag humano: el splash está ~0.4 s antes del keypress
 
 
@@ -59,28 +59,13 @@ def locate_bbox(frames, detector, keypress_index):
     return bbox
 
 
-def patch_box(bbox, w, h, scale=PATCH_SCALE):
-    if bbox is None:  # fallback: parche central (40% del frame)
-        return int(w * 0.3), int(h * 0.3), int(w * 0.7), int(h * 0.7)
-    x1, y1, x2, y2 = bbox
-    cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
-    pw, ph = (x2 - x1) * scale, (y2 - y1) * scale
-    return (max(0, int(cx - pw / 2)), max(0, int(cy - ph / 2)),
-            min(w, int(cx + pw / 2)), min(h, int(cy + ph / 2)))
-
-
 def metrics(frames, patch, k=DIFF_K):
     X1, Y1, X2, Y2 = patch
-    area = max(1, (Y2 - Y1) * (X2 - X1))
     grays = [cv2.cvtColor(img[Y1:Y2, X1:X2], cv2.COLOR_BGR2GRAY).astype(np.int16) for _, img in frames]
     fdiff = [0.0] * len(frames)
     for i in range(k, len(frames)):
         fdiff[i] = float(np.mean(np.abs(grays[i] - grays[i - k])))
-    foam = []
-    for _, img in frames:
-        hsv = cv2.cvtColor(img[Y1:Y2, X1:X2], cv2.COLOR_BGR2HSV)
-        white = int(((hsv[:, :, 2] > 200) & (hsv[:, :, 1] < 60)).sum())
-        foam.append(white / area)
+    foam = [foam_value(img, patch) for _, img in frames]
     return fdiff, foam
 
 
