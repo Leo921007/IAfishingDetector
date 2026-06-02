@@ -38,6 +38,9 @@ class InputCfg:
     cast_key: str
     loot_button: str
     delay_after_click: float
+    move_settle: float
+    click_hold: float
+    loot_settle: float
     watchdog_interval: float
     watchdog_warn_after: int
     mouse_park: Tuple[int, int]
@@ -117,6 +120,9 @@ def load_config(path: str | Path | None = None) -> Config:
             cast_key=str(inp["cast_key"]),
             loot_button=str(inp["loot_button"]),
             delay_after_click=float(inp["delay_after_click"]),
+            move_settle=float(inp.get("move_settle", 0.08)),
+            click_hold=float(inp.get("click_hold", 0.06)),
+            loot_settle=float(inp.get("loot_settle", 0.2)),
             watchdog_interval=float(inp.get("watchdog_interval", 3.0)),
             watchdog_warn_after=int(inp.get("watchdog_warn_after", 5)),
             mouse_park=(int(inp.get("mouse_park", {}).get("x", 300)),

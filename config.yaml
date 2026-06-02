@@ -29,6 +29,9 @@ input:
   cast_key: "2"            # tecla que lanza la caña (hechizo Pesca en la barra de acción)
   loot_button: right       # en WoW el corcho se recoge con CLIC DERECHO
   delay_after_click: 2.0   # segundos tras recoger antes de relanzar
+  move_settle: 0.08        # s tras mover el cursor antes de pulsar (que el juego registre la posición)
+  click_hold: 0.06         # s que se mantiene pulsado el botón (press->release no instantáneo)
+  loot_settle: 0.2         # s tras el clic antes de parkear (que WoW registre el loot sobre el corcho)
   watchdog_interval: 3.0   # segundos entre sondeos del watchdog (alineado con los chunks de audio)
   watchdog_warn_after: 5   # avisar tras N recasts seguidos sin corcho (señal de deriva de cámara)
   mouse_park:              # punto FUERA de la ROI para parkear el cursor (no tapar el corcho)

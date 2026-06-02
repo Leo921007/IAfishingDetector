@@ -7,6 +7,7 @@ la ruta de detección (corcho_detector) no lo importa nunca.
 """
 from __future__ import annotations
 
+import time
 from typing import Tuple
 
 import numpy as np
@@ -29,19 +30,25 @@ class ScreenCapturer:
 class InputController:
     """Mueve el ratón, hace clic y pulsa teclas en el equipo de juego."""
 
-    def __init__(self) -> None:
-        import keyboard  # import perezoso
-        import pyautogui  # import perezoso
-
-        self._pg = pyautogui
-        self._kb = keyboard
+    def __init__(self, pg=None, kb=None) -> None:
+        if pg is None:
+            import pyautogui as pg  # import perezoso (Windows)
+        if kb is None:
+            import keyboard as kb  # import perezoso (Windows)
+        self._pg = pg
+        self._kb = kb
         self._pg.FAILSAFE = True
 
-    def move_and_click(self, x: int, y: int, button: str = "left") -> None:
-        # moveTo es instantáneo (duration=0) y click() es press+release en el sitio, SIN
-        # movimiento intermedio: un right-click así NO arrastra ni rota la cámara en WoW.
+    def move_and_click(self, x: int, y: int, button: str = "left",
+                       move_settle: float = 0.08, click_hold: float = 0.06) -> None:
+        # NO instantáneo: WoW (DirectInput) necesita registrar el cursor sobre el corcho antes del clic.
+        # mover -> pausa (que el juego registre la posición) -> press -> mantener -> release.
+        # Sigue sin movimiento intermedio durante el clic: no arrastra ni rota la cámara.
         self._pg.moveTo(x, y)
-        self._pg.click(button=button)
+        time.sleep(move_settle)
+        self._pg.mouseDown(button=button)
+        time.sleep(click_hold)
+        self._pg.mouseUp(button=button)
 
     def park(self, x: int, y: int) -> None:
         """Mueve el cursor a un punto (sin clic): para apartarlo de la ROI tras loot/recast."""

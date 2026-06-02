@@ -20,8 +20,8 @@ class FakeInput:
     def press_key(self, key):
         self.casts += 1
 
-    def move_and_click(self, x, y, button="left"):
-        self.clicks.append((x, y, button))
+    def move_and_click(self, x, y, button="left", move_settle=None, click_hold=None):
+        self.clicks.append((x, y, button, move_settle, click_hold))
 
     def park(self, x, y):
         self.parks.append((x, y))
@@ -148,6 +148,33 @@ def test_do_loot_clic_park_recast():
     assert inp.casts == 1          # recast tras loot
     assert len(inp.parks) >= 2     # park tras loot y tras recast
     assert loop.consecutive_recasts == 0
+
+
+def test_do_loot_parkea_despues_del_clic_con_settle(monkeypatch):
+    events = []
+
+    class TimedInput:
+        def press_key(self, key):
+            events.append(("cast",))
+
+        def move_and_click(self, x, y, button="left", move_settle=None, click_hold=None):
+            events.append(("click", move_settle, click_hold))
+
+        def park(self, x, y):
+            events.append(("park",))
+
+    monkeypatch.setattr(main.time, "sleep", lambda s: events.append(("sleep", s)))
+    loop = main.LootLoop(
+        CFG, FakeLog(), FakeDetector([]), FakeCapturer(), TimedInput(),
+        session=SessionRecorder(CFG.session.dir, enabled=False, fs=44100),
+        bite=FoamBiteDetector(CFG.bite.foam_threshold, CFG.bite.foam_min_frames), grabber=None,
+    )
+    loop.do_loot(1, _det())
+
+    # clic -> espera loot_settle -> park (park DESPUÉS del clic, con el settle entre medio)
+    assert events[0] == ("click", CFG.input.move_settle, CFG.input.click_hold)
+    assert events[1] == ("sleep", CFG.input.loot_settle)
+    assert events[2] == ("park",)
 
 
 def test_warning_tras_n_recasts():

@@ -77,7 +77,10 @@ class LootLoop:
         x_abs, y_abs = self.roi.left + cx, self.roi.top + cy
         self.log.info("ciclo %d: loot %s en (%d,%d) conf=%.3f", ciclo, self.cfg.input.loot_button,
                       x_abs, y_abs, best.conf)
-        self.inputc.move_and_click(x_abs, y_abs, button=self.cfg.input.loot_button)
+        self.inputc.move_and_click(x_abs, y_abs, button=self.cfg.input.loot_button,
+                                   move_settle=self.cfg.input.move_settle,
+                                   click_hold=self.cfg.input.click_hold)
+        time.sleep(self.cfg.input.loot_settle)  # que WoW registre el loot con el cursor sobre el corcho
         self._park()
         time.sleep(self.cfg.input.delay_after_click)
         self.cast_and_park()
