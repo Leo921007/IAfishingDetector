@@ -8,13 +8,14 @@ detector:
   iou_threshold: 0.45
   imgsz: 640
 
-# Región de pantalla a capturar, ALINEADA al encuadre de los recortes de entrenamiento
-# (~430x257). Calibrar a tu resolución/UI. (left, top) = esquina superior izquierda en píxeles.
+# Región de pantalla a capturar. Anclada a la sesión real 20260601_222727 (Etapa 6A):
+# las dimensiones (748x387) = tamaño de los frames grabados; left/top derivados de los eventos
+# (click - centro_bbox, unánime). Define la escala del corcho para captura/entrenamiento/inferencia.
 roi:
-  left: 720
-  top: 400
-  width: 480
-  height: 270
+  left: 586
+  top: 126
+  width: 748
+  height: 387
 
 input:
   cast_key: "2"            # tecla que lanza la caña (hechizo Pesca en la barra de acción)
