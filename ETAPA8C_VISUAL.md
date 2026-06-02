@@ -21,7 +21,9 @@ el loot.
 Correr **YOLO en cada frame** para seguir el corcho es **caro en CPU** (en el equipo de juego el detector
 va por onnxruntime CPU) y no aguanta ~30 fps. En cambio, calcular foam sobre un **parche fijo** es barato.
 Por eso el loop (`main.LootLoop.run`):
-- **LOCATE:** corre YOLO para ubicar el corcho (bbox → parche).
+- **LOCATE:** **espera** a que el corcho aparezca tras castear, sondeando con YOLO a ~8 fps hasta
+  `bite.locate_timeout` (~3 s; en WoW el corcho tarda ~1-1.5 s). Solo recastea si expira sin corcho — así
+  no se auto-interrumpe el casteo. Devuelve el bbox → parche.
 - **POLL:** samplea el foam a `poll_fps` sobre ese parche; **re-localiza** con YOLO cada `relocate_seconds`
   (el corcho deriva despacio) y confirma que sigue presente.
 - Al disparar el foam → **loot** (clic derecho en el centro del corcho) → **park** → **recast**.
@@ -43,6 +45,7 @@ bite:
   poll_fps: 30             # tasa de sondeo del foam (8B: separable hasta ~24 fps)
   relocate_seconds: 0.5    # cada cuánto re-localizar el corcho con YOLO
   max_wait_seconds: 25     # safety: sin mordida en este tiempo -> recast
+  locate_timeout: 3.0      # espera al corcho tras castear antes de recastear (8C-fix)
 ```
 
 Parseo tolerante (`.get` con defaults). **El audio salió de la config** (sección `audio` y `AudioCfg`
