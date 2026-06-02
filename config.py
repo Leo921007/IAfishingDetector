@@ -52,6 +52,7 @@ class BiteCfg:
     foam_min_frames: int
     poll_fps: float
     relocate_seconds: float
+    relocate_tolerance: int
     max_wait_seconds: float
     locate_timeout: float
 
@@ -113,6 +114,7 @@ def load_config(path: str | Path | None = None) -> Config:
             foam_min_frames=int(data.get("bite", {}).get("foam_min_frames", 2)),
             poll_fps=float(data.get("bite", {}).get("poll_fps", 30)),
             relocate_seconds=float(data.get("bite", {}).get("relocate_seconds", 0.5)),
+            relocate_tolerance=int(data.get("bite", {}).get("relocate_tolerance", 3)),
             max_wait_seconds=float(data.get("bite", {}).get("max_wait_seconds", 25)),
             locate_timeout=float(data.get("bite", {}).get("locate_timeout", 3.0)),
         ),

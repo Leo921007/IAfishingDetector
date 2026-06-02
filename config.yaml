@@ -4,7 +4,7 @@ model:
   onnx: models/corcho_detector/best.onnx   # runtime de inferencia ONNX
 
 detector:
-  conf_threshold: 0.5      # umbral alto por la tasa de falsos positivos medida en la Etapa 2
+  conf_threshold: 0.25     # el modelo nuevo (best_zona) no da FP a 0.25 (validado en 8B); reduce el flaqueo del relocate
   iou_threshold: 0.45
   imgsz: 640
 
@@ -13,6 +13,7 @@ bite:                      # trigger visual de la mordida por SPLASH (foam). Afi
   foam_min_frames: 2       # frames consecutivos sobre el umbral para disparar
   poll_fps: 30             # tasa de sondeo del foam (8B: separable hasta ~24 fps)
   relocate_seconds: 0.5    # cada cuánto re-localizar el corcho con YOLO (entre medias solo foam)
+  relocate_tolerance: 3    # fallos de relocate consecutivos antes de declarar "corcho perdido" y recastear
   max_wait_seconds: 25     # safety: sin mordida en este tiempo -> recast igual
   locate_timeout: 3.0      # segundos esperando a que aparezca el corcho tras castear antes de recastear
 

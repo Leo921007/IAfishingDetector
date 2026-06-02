@@ -177,6 +177,21 @@ def test_do_loot_parkea_despues_del_clic_con_settle(monkeypatch):
     assert events[2] == ("park",)
 
 
+def test_relocate_tolera_fallos_aislados():
+    loop, _, _ = _loop()
+    assert loop.note_relocate(None) == "keep"     # 1er fallo
+    assert loop.note_relocate(None) == "keep"     # 2º fallo (tolerance=3)
+    assert loop.note_relocate(_det()) == "ok"     # éxito resetea el contador
+    assert loop.note_relocate(None) == "keep"     # vuelve a empezar
+
+
+def test_relocate_perdido_tras_tolerance():
+    loop, _, _ = _loop()
+    res = [loop.note_relocate(None) for _ in range(CFG.bite.relocate_tolerance)]
+    assert res[-1] == "lost"
+    assert res[:-1] == ["keep"] * (CFG.bite.relocate_tolerance - 1)
+
+
 def test_warning_tras_n_recasts():
     loop, inp, log = _loop()
     for c in range(CFG.input.watchdog_warn_after):

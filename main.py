@@ -51,6 +51,7 @@ class LootLoop:
         self.grabber = grabber
         self.roi = cfg.roi
         self.consecutive_recasts = 0
+        self.relocate_fails = 0
         self.last_cast = 0.0
 
     def _park(self):
@@ -107,6 +108,15 @@ class LootLoop:
                 time.sleep(slept)
         return None, frame
 
+    def note_relocate(self, best_or_none):
+        """Tolera fallos aislados del relocate: 'ok' si hay corcho (resetea); 'keep' si falla pero
+        aún por debajo de la tolerancia (mantener bbox y seguir); 'lost' tras relocate_tolerance fallos."""
+        if best_or_none is not None:
+            self.relocate_fails = 0
+            return "ok"
+        self.relocate_fails += 1
+        return "lost" if self.relocate_fails >= self.cfg.bite.relocate_tolerance else "keep"
+
     def _record(self, ciclo, frame, detection, outcome, action):
         self.session.record_cycle(
             ciclo, frame_bgr=frame, audio_int16=None,
@@ -134,6 +144,7 @@ class LootLoop:
             bbox = (best.x1, best.y1, best.x2, best.y2)
             self.bite.reset()
             self.consecutive_recasts = 0
+            self.relocate_fails = 0
             wait_start = last_relocate = time.monotonic()
 
             # --- POLL: samplear foam a poll_fps, re-localizando cada relocate_seconds ---
@@ -151,14 +162,17 @@ class LootLoop:
                     outcome, action = "recast_timeout", "recast"
                     break
                 if t - last_relocate >= self.cfg.bite.relocate_seconds:
+                    last_relocate = t
                     dets = self.detector.detect(frame)
-                    if not dets:
-                        self.do_recast(ciclo, "corcho perdido")
+                    newbest = max(dets, key=lambda d: d.conf) if dets else None
+                    status = self.note_relocate(newbest)
+                    if status == "lost":
+                        self.do_recast(ciclo, "corcho perdido (%d fallos)" % self.relocate_fails)
                         outcome, action = "recast_perdido", "recast"
                         break
-                    best = max(dets, key=lambda d: d.conf)
-                    bbox = (best.x1, best.y1, best.x2, best.y2)
-                    last_relocate = t
+                    if status == "ok":
+                        best, bbox = newbest, (newbest.x1, newbest.y1, newbest.x2, newbest.y2)
+                    # "keep": un frame flaco -> mantener el último bbox y seguir sondeando foam
                 slept = interval - (time.monotonic() - t)
                 if slept > 0:
                     time.sleep(slept)
