@@ -1,12 +1,14 @@
-"""Match de audio por similitud FFT.
+"""Match de la mordida por audio: NCC de la ENVOLVENTE de amplitud.
 
-Algoritmo **conservado** de la versión original (ganancia → normalización → filtro pasa-banda
-Butterworth → FFT → similitud coseno contra referencias). Separado de la captura: recibe la
-señal ya grabada (int16) y devuelve (matched, scores), por lo que es importable y testeable en
-WSL2 sin `sounddevice`.
+La versión anterior (coseno de magnitudes FFT) tenía especificidad casi nula: el ruido de banda
+ancha puntuaba igual que el sonido genuino (ver bench_audio.py). Este discriminador compara la
+**envolvente de amplitud** (forma del transitorio: onset agudo + decaimiento del splash) mediante
+correlación cruzada normalizada (NCC). La envolvente es consistente entre grabaciones distintas del
+mismo sonido y plana en el ruido → margen de separabilidad amplio (~+0.44 vs ~0 del coseno).
 
-Carga los WAV de referencia con `scipy.io.wavfile` — numéricamente equivalente al antiguo
-`audio_to_np_mono` para PCM 16-bit mono (formato de Fishing_*.wav y de las grabaciones).
+Pocos parámetros (banda, submuestreo de envolvente, umbral) — discriminador principista, no entrenado.
+Recibe la señal ya grabada (int16) y devuelve (matched, scores): importable/testeable sin sounddevice.
+La interfaz match_audio(recording_int16, fs, references, audio_cfg) -> (matched, scores) NO cambia.
 """
 from __future__ import annotations
 
@@ -15,10 +17,13 @@ from typing import Dict, Sequence, Tuple
 
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, correlate, hilbert, lfilter
+
+ENVELOPE_HZ = 1000  # submuestreo de la envolvente
 
 
 def apply_gain(audio_int16: np.ndarray, gain: float) -> np.ndarray:
+    """Amplifica con saturación. (Utilidad; el match por NCC es invariante a escala y no la usa.)"""
     amplified = np.asarray(audio_int16).astype(np.float32) * gain
     amplified = np.clip(amplified, -32768, 32767)
     return amplified.astype(np.int16)
@@ -46,17 +51,24 @@ def load_reference(path: str | Path, fs: int) -> np.ndarray:
     return to_mono_normalized(data)
 
 
-def _fft_mag_norm(signal: np.ndarray, fs: int, bandpass: Tuple[float, float]) -> np.ndarray:
-    filt = bandpass_filter(signal, fs, bandpass[0], bandpass[1], order=4)
-    mag = np.abs(np.fft.rfft(filt))
-    peak = np.max(mag)
-    return mag / peak if peak else mag
+def _preprocess(signal_int16: np.ndarray, fs: int, bandpass: Tuple[float, float]) -> np.ndarray:
+    return bandpass_filter(to_mono_normalized(signal_int16), fs, bandpass[0], bandpass[1])
 
 
-def _cosine(a: np.ndarray, b: np.ndarray) -> float:
-    n = min(len(a), len(b))
-    a, b = a[:n], b[:n]
-    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-10))
+def envelope(signal: np.ndarray, fs: int, target_hz: int = ENVELOPE_HZ) -> np.ndarray:
+    """Envolvente de amplitud (|Hilbert|) submuestreada a ~target_hz."""
+    env = np.abs(hilbert(signal))
+    step = max(1, fs // target_hz)
+    return env[::step]
+
+
+def ncc_peak(a: np.ndarray, b: np.ndarray) -> float:
+    """Pico de la correlación cruzada normalizada entre dos señales (invariante a desfase/escala)."""
+    a = a - np.mean(a)
+    b = b - np.mean(b)
+    a = a / (np.linalg.norm(a) + 1e-12)
+    b = b / (np.linalg.norm(b) + 1e-12)
+    return float(np.max(np.abs(correlate(a, b, mode="full", method="fft"))))
 
 
 def match_audio(
@@ -65,22 +77,18 @@ def match_audio(
     references: Sequence[str | Path],
     audio_cfg,
 ) -> Tuple[bool, Dict[str, float]]:
-    """Compara la grabación contra las referencias.
+    """Compara la grabación contra las referencias por NCC de envolvente.
 
-    Devuelve (matched, {nombre_referencia: similitud_coseno}). La decisión (matched) es idéntica
-    a la original: True si alguna referencia supera audio_cfg.similarity_threshold. Se calculan
-    todos los scores (útil para logging) en lugar de cortar en la primera coincidencia.
+    Devuelve (matched, {nombre_referencia: ncc_envolvente}). matched = True si alguna referencia
+    supera audio_cfg.similarity_threshold. Interfaz idéntica a la versión anterior.
     """
-    amp = apply_gain(recording_int16, audio_cfg.gain)
-    rec = to_mono_normalized(amp)
-    fft_rec = _fft_mag_norm(rec, fs, audio_cfg.bandpass)
+    rec_env = envelope(_preprocess(recording_int16, fs, audio_cfg.bandpass), fs)
 
     scores: Dict[str, float] = {}
     matched = False
     for ref_path in references:
-        ref = load_reference(ref_path, fs)
-        fft_ref = _fft_mag_norm(ref, fs, audio_cfg.bandpass)
-        score = _cosine(fft_rec, fft_ref)
+        ref_env = envelope(_preprocess(load_reference(ref_path, fs), fs, audio_cfg.bandpass), fs)
+        score = ncc_peak(rec_env, ref_env)
         scores[Path(ref_path).name] = score
         if score > audio_cfg.similarity_threshold:
             matched = True
