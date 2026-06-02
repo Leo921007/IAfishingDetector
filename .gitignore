@@ -25,6 +25,9 @@ logs/
 # Sesiones grabadas (frames/audio/eventos)
 sessions/
 
+# Dataset de zona extraído (frames/labels/montaje pesados; local para etiquetar)
+dataset_zona/
+
 # Cachés de dataset que regenera Ultralytics
 dataset/labels/*.cache
 *.cache
