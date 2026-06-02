@@ -1,0 +1,11 @@
+# Dataset de zona (Etapa 6B): split POR CICLO (anti-fuga).
+# train = dataset original + zona (train); val = ciclos de zona reservados.
+path: /home/leonardo/projects/IAfishingDetector
+train:
+  - dataset/images/train
+  - dataset_zona/images/train
+val:
+  - dataset_zona/images/val
+nc: 1
+names:
+  0: corcho
