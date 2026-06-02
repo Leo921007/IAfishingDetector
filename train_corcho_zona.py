@@ -47,7 +47,7 @@ def main():
     # Export ONNX a archivo SEPARADO (no sobrescribir best.onnx).
     best_pt = RUN_DIR / "weights" / "best.pt"
     onnx_src = YOLO(str(best_pt)).export(format="onnx", imgsz=640)
-    dst = REPO / "models" / "corcho_detector" / "best_zona.onnx"
+    dst = REPO / "locations" / "stormwind" / "detector.onnx"
     shutil.copy(onnx_src, dst)
     print(f"Modelo nuevo: {best_pt}")
     print(f"ONNX de zona (separado): {dst}")

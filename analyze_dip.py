@@ -25,12 +25,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from config import REPO_ROOT
+from config import REPO_ROOT, load_config
 from corcho_detector import CorchoDetector
 
 DEFAULT_SESSIONS = ["20260602_100757", "20260601_222727", "20260601_221053"]
-MODEL = REPO_ROOT / "models" / "corcho_detector" / "best_zona.onnx"
-OUT = REPO_ROOT / "dataset_zona" / "dip_analysis"
+MODEL = load_config().model_onnx  # modelo de la ubicación activa (config detector_mode/location)
+OUT = REPO_ROOT / "locations" / "stormwind" / "dataset" / "dip_analysis"
 CONF = 0.25
 BASELINE_WIN = 6
 

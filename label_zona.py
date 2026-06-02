@@ -124,7 +124,7 @@ def draw_hud(disp, idx, total, basename, n_boxes, n_proposed):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Etiquetador mínimo del dataset de zona")
-    ap.add_argument("--dir", default=str(Path(__file__).parent / "dataset_zona" / "raw"))
+    ap.add_argument("--dir", default=str(Path(__file__).parent / "locations" / "stormwind" / "dataset" / "raw"))
     ap.add_argument("--scale", type=float, default=1.5, help="zoom de la ventana (objeto pequeño)")
     args = ap.parse_args()
 

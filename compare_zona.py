@@ -17,8 +17,8 @@ from config import REPO_ROOT
 DATA = REPO_ROOT / "data" / "corcho_zona.yaml"
 OLD = REPO_ROOT / "models" / "corcho_detector" / "best.pt"
 NEW = REPO_ROOT / "runs" / "corcho" / "zona_v1" / "weights" / "best.pt"
-VAL_IMG = REPO_ROOT / "dataset_zona" / "images" / "val"
-VAL_LBL = REPO_ROOT / "dataset_zona" / "labels" / "val"
+VAL_IMG = REPO_ROOT / "locations" / "stormwind" / "dataset" / "images" / "val"
+VAL_LBL = REPO_ROOT / "locations" / "stormwind" / "dataset" / "labels" / "val"
 CONF_FP = 0.25
 
 

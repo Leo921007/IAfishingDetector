@@ -3,9 +3,9 @@
 path: /home/leonardo/projects/IAfishingDetector
 train:
   - dataset/images/train
-  - dataset_zona/images/train
+  - locations/stormwind/dataset/images/train
 val:
-  - dataset_zona/images/val
+  - locations/stormwind/dataset/images/val
 nc: 1
 names:
   0: corcho

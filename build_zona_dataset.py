@@ -23,8 +23,8 @@ from pathlib import Path
 
 from config import REPO_ROOT
 
-RAW = REPO_ROOT / "dataset_zona" / "raw"
-ZONA = REPO_ROOT / "dataset_zona"
+ZONA = REPO_ROOT / "locations" / "stormwind" / "dataset"
+RAW = ZONA / "raw"
 MANIFEST = RAW / "_manifest.csv"
 
 
@@ -90,9 +90,9 @@ def main() -> None:
         f"path: {REPO_ROOT}\n"
         "train:\n"
         "  - dataset/images/train\n"
-        "  - dataset_zona/images/train\n"
+        "  - locations/stormwind/dataset/images/train\n"
         "val:\n"
-        "  - dataset_zona/images/val\n"
+        "  - locations/stormwind/dataset/images/val\n"
         "nc: 1\n"
         "names:\n"
         "  0: corcho\n",

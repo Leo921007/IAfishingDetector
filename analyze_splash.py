@@ -30,13 +30,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from config import REPO_ROOT
+from config import REPO_ROOT, load_config
 from corcho_detector import CorchoDetector
 from splash import PATCH_SCALE, foam_value, patch_box  # fuente única (vivo == offline)
 
 ROOT = REPO_ROOT / "captures_bite"
 OUT = ROOT / "analysis"
-MODEL = REPO_ROOT / "models" / "corcho_detector" / "best_zona.onnx"
+MODEL = load_config().model_onnx  # modelo de la ubicación activa (config detector_mode/location)
 DIFF_K = 1
 REACTION_S = 0.4  # lag humano: el splash está ~0.4 s antes del keypress
 

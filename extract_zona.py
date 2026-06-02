@@ -228,7 +228,7 @@ def run_extract(args, out_dir: Path) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Extrae el dataset de la zona desde las sesiones grabadas")
     ap.add_argument("--sessions", nargs="*", default=DEFAULT_SESSIONS)
-    ap.add_argument("--out", default=str(REPO_ROOT / "dataset_zona" / "raw"))
+    ap.add_argument("--out", default=str(REPO_ROOT / "locations" / "stormwind" / "dataset" / "raw"))
     ap.add_argument("--per-cycle", type=int, default=3)
     ap.add_argument("--max", type=int, default=250)
     ap.add_argument("--conf", type=float, default=0.10, help="conf baja para PROPUESTAS")
