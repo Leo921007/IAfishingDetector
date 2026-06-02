@@ -53,17 +53,6 @@ class BiteCfg:
 
 
 @dataclass(frozen=True)
-class AudioCfg:
-    references: List[Path]
-    fs: int
-    duration: int
-    gain: float
-    bandpass: Tuple[float, float]
-    similarity_threshold: float
-    listen_window: int
-
-
-@dataclass(frozen=True)
 class LoggingCfg:
     level: str
     dir: Path
@@ -93,7 +82,6 @@ class Config:
     roi: ROICfg
     input: InputCfg
     bite: BiteCfg
-    audio: AudioCfg
     logging: LoggingCfg
     session: SessionCfg
 
@@ -105,7 +93,6 @@ def load_config(path: str | Path | None = None) -> Config:
     det = data["detector"]
     roi = data["roi"]
     inp = data["input"]
-    aud = data["audio"]
     log = data["logging"]
     ses = data["session"]
 
@@ -132,15 +119,6 @@ def load_config(path: str | Path | None = None) -> Config:
             watchdog_warn_after=int(inp.get("watchdog_warn_after", 5)),
             mouse_park=(int(inp.get("mouse_park", {}).get("x", 300)),
                         int(inp.get("mouse_park", {}).get("y", 700))),
-        ),
-        audio=AudioCfg(
-            references=[REPO_ROOT / r for r in aud["references"]],
-            fs=int(aud["fs"]),
-            duration=int(aud["duration"]),
-            gain=float(aud["gain"]),
-            bandpass=(float(aud["bandpass"][0]), float(aud["bandpass"][1])),
-            similarity_threshold=float(aud["similarity_threshold"]),
-            listen_window=int(aud["listen_window"]),
         ),
         logging=LoggingCfg(
             level=str(log["level"]),

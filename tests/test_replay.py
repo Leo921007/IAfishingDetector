@@ -19,7 +19,6 @@ def test_replay_muestra_headless(tmp_path):
 
     assert len(results) == 1
     r = results[0]
-    assert r["audio_matched"] is True  # el chunk es una referencia -> coincide
     assert r["detection"] is not None  # el frame de val contiene corcho
 
     # el replay no debe requerir I/O de plataforma
