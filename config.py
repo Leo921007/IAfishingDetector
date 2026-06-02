@@ -61,9 +61,17 @@ class LoggingCfg:
 
 
 @dataclass(frozen=True)
+class FramesCfg:
+    enabled: bool
+    fps: float
+    max_frames: int
+
+
+@dataclass(frozen=True)
 class SessionCfg:
     enabled: bool
     dir: Path
+    frames: FramesCfg
 
 
 @dataclass(frozen=True)
@@ -120,5 +128,10 @@ def load_config(path: str | Path | None = None) -> Config:
         session=SessionCfg(
             enabled=bool(ses["enabled"]),
             dir=REPO_ROOT / ses["dir"],
+            frames=FramesCfg(
+                enabled=bool(ses["frames"]["enabled"]),
+                fps=float(ses["frames"]["fps"]),
+                max_frames=int(ses["frames"]["max_frames"]),
+            ),
         ),
     )

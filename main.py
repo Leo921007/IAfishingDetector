@@ -16,7 +16,7 @@ from config import load_config
 from audio_match import match_audio
 from corcho_detector import CorchoDetector
 from logging_setup import setup_logging
-from platform_io import AudioRecorder, InputController, ScreenCapturer
+from platform_io import AudioRecorder, FrameGrabber, InputController, ScreenCapturer
 from session import SessionRecorder
 
 CFG = load_config()
@@ -42,10 +42,19 @@ def main():
     capturer = ScreenCapturer()
     inputc = InputController()
     recorder = AudioRecorder()
+    recording_enabled = args.record or CFG.session.enabled
     session = SessionRecorder(
-        CFG.session.dir, enabled=(args.record or CFG.session.enabled), fs=CFG.audio.fs
+        CFG.session.dir, enabled=recording_enabled, fs=CFG.audio.fs,
+        frames_max=CFG.session.frames.max_frames,
     )
     roi = CFG.roi
+
+    grabber = None
+    if recording_enabled and CFG.session.frames.enabled:
+        grabber = FrameGrabber(roi.as_mss(), CFG.session.frames.fps, CFG.session.frames.max_frames)
+        grabber.start()
+        log.info("Captura de frames activa (%.0f fps, máx %d)", CFG.session.frames.fps,
+                 CFG.session.frames.max_frames)
     log.info(
         "ROI=%s | conf=%.2f | loot=%s | escucha=%ds | grabando=%s",
         roi.as_mss(), CFG.detector.conf_threshold, CFG.input.loot_button,
@@ -105,6 +114,7 @@ def main():
 
                     session.record_cycle(
                         ciclo, frame_bgr=frame, audio_int16=recording,
+                        frames=(grabber.snapshot() if grabber else None),
                         event={"matched": True, "scores": {k: round(v, 4) for k, v in scores.items()},
                                "detection": detection, "outcome": outcome},
                     )
@@ -115,6 +125,7 @@ def main():
                 log.info("ciclo %d: sin sonido en %ds, relanzando", ciclo, CFG.audio.listen_window)
                 session.record_cycle(
                     ciclo, frame_bgr=None, audio_int16=last_recording,
+                    frames=(grabber.snapshot() if grabber else None),
                     event={"matched": False,
                            "scores": {k: round(v, 4) for k, v in last_scores.items()},
                            "detection": None, "outcome": "sin_sonido"},
@@ -123,6 +134,9 @@ def main():
                 time.sleep(CFG.input.delay_after_click)
     except KeyboardInterrupt:
         log.info("Finalizado por el usuario.")
+    finally:
+        if grabber is not None:
+            grabber.stop()
 
 
 if __name__ == "__main__":

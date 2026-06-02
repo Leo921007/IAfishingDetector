@@ -57,3 +57,48 @@ class AudioRecorder:
         recording = self._sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype="int16")
         self._sd.wait()
         return recording
+
+
+class FrameGrabber:
+    """Captura la ROI a ~fps en un hilo, manteniendo un ring buffer (ventana alrededor del candidato).
+
+    Permite obtener metraje de la mordida sin bloquear el loop. Concurrencia y mss aislados aquí
+    (import perezoso): importar el módulo no exige display.
+    """
+
+    def __init__(self, roi: dict, fps: float, max_frames: int) -> None:
+        from collections import deque
+
+        self._roi = roi
+        self._interval = 1.0 / fps if fps > 0 else 0.1
+        self._buf = deque(maxlen=max_frames)
+        self._stop = None
+        self._thread = None
+
+    def start(self) -> None:
+        import threading
+
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _run(self) -> None:
+        import time
+
+        import mss  # import perezoso
+
+        with mss.mss() as sct:
+            while self._stop is not None and not self._stop.is_set():
+                shot = sct.grab(self._roi)
+                self._buf.append(np.array(shot)[:, :, :3])
+                time.sleep(self._interval)
+
+    def snapshot(self) -> list:
+        """Devuelve la ventana de frames más reciente (copia)."""
+        return list(self._buf)
+
+    def stop(self) -> None:
+        if self._stop is not None:
+            self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=1.0)

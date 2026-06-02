@@ -24,6 +24,10 @@ input:
 session:
   enabled: false           # true (o flag --record) para grabar frames/audio/eventos por ciclo
   dir: sessions
+  frames:                  # secuencia de frames alrededor de la decisión (metraje para la Etapa 6)
+    enabled: true
+    fps: 10
+    max_frames: 40         # cap de disco por ciclo (ring buffer)
 
 logging:
   level: INFO              # DEBUG para ver los scores de audio por ciclo
