@@ -53,6 +53,23 @@ class SeqDetector:
         return list(r)
 
 
+class HighFoamCapturer:
+    def grab(self, roi):
+        return np.full((30, 30, 3), 255, dtype=np.uint8)  # parche blanco -> foam alto
+
+
+class FakeClock:
+    """Reloj determinista: avanza dt en cada llamada (para timeouts en run_cycle sin esperar real)."""
+
+    def __init__(self, dt):
+        self.t = 0.0
+        self.dt = dt
+
+    def __call__(self):
+        self.t += self.dt
+        return self.t
+
+
 class FakeLog:
     def __init__(self):
         self.warnings = []
@@ -100,28 +117,39 @@ def _det():
     return Detection(x1=10, y1=10, x2=20, y2=20, conf=0.9)
 
 
-def test_locate_encuentra_tras_intentos_no_recasta():
-    loop, inp = _loop_seq([[], [], [_det()]])  # aparece al 3er intento
-    best, _ = loop.locate(1)
-    assert best is not None
-    assert inp.casts == 0  # locate no recastea
+def test_run_cycle_foam_dispara_apenas_hay_bbox():
+    # detector fija bbox en la 1ª detección; capturer de foam alto -> dispara sin "fase POLL" aparte.
+    loop, inp = _loop_seq([[_det()]])
+    loop.capturer = HighFoamCapturer()
+    loop.clock = FakeClock(0.01)
+    _, _, bbox, _, outcome, action = loop.run_cycle(1)
+    assert outcome == "recogido" and action == "loot"
+    assert bbox is not None
+    assert len(inp.clicks) == 1  # do_loot hizo el clic
 
 
-def test_locate_timeout_devuelve_none():
-    loop, inp = _loop_seq([[]])  # nunca aparece
-    best, _ = loop.locate(1)
-    assert best is None
-    # acotado: ~locate_timeout * LOCATE_FPS intentos
-    assert loop.detector.calls == max(1, round(CFG.bite.locate_timeout * main.LOCATE_FPS))
-
-
-def test_locate_none_dispara_recast():
-    loop, inp = _loop_seq([[]])
-    best, _ = loop.locate(1)
-    assert best is None
-    loop.do_recast(1, "sin corcho tras esperar")
+def test_run_cycle_recast_sin_corcho():
+    loop, inp = _loop_seq([[]])      # nunca aparece el corcho
+    loop.clock = FakeClock(0.6)      # supera locate_timeout en pocas iteraciones
+    _, _, bbox, _, outcome, _ = loop.run_cycle(1)
+    assert outcome == "recast_sin_corcho"
+    assert bbox is None
     assert inp.casts == 1
-    assert loop.consecutive_recasts == 1
+
+
+def test_run_cycle_recast_perdido():
+    loop, inp = _loop_seq([[_det()], [], [], []])  # fija bbox y luego falla el relocate
+    loop.clock = FakeClock(1.6)                     # relocate cada iteración (>relocate_seconds)
+    _, _, _, _, outcome, _ = loop.run_cycle(1)      # capturer por defecto (foam 0): no dispara
+    assert outcome == "recast_perdido"
+    assert loop.relocate_fails == CFG.bite.relocate_tolerance
+
+
+def test_run_cycle_recast_timeout():
+    loop, inp = _loop_seq([[_det()]])  # corcho presente, foam 0 -> nunca muerde
+    loop.clock = FakeClock(9.0)        # supera max_wait_seconds
+    _, _, _, _, outcome, _ = loop.run_cycle(1)
+    assert outcome == "recast_timeout"
 
 
 def test_decide():

@@ -13,7 +13,7 @@ bite:                      # trigger visual de la mordida por SPLASH (foam). Afi
   foam_threshold: 0.005    # fracción de píxeles casi-blancos en el parche (8B: flote~0, mordida 0.003-0.074)
   foam_min_frames: 2       # frames consecutivos sobre el umbral para disparar
   poll_fps: 30             # tasa de sondeo del foam (8B: separable hasta ~24 fps)
-  relocate_seconds: 0.5    # cada cuánto re-localizar el corcho con YOLO (entre medias solo foam)
+  relocate_seconds: 1.5    # cada cuánto re-localizar el corcho con YOLO (entre medias foam continuo)
   relocate_tolerance: 3    # fallos de relocate consecutivos antes de declarar "corcho perdido" y recastear
   max_wait_seconds: 25     # safety: sin mordida en este tiempo -> recast igual
   locate_timeout: 3.0      # segundos esperando a que aparezca el corcho tras castear antes de recastear
