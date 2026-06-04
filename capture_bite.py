@@ -27,7 +27,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from config import REPO_ROOT, load_config
+from pesca.config import REPO_ROOT, load_config
 
 
 def _dump_window(buf, t_press, pre, post, out_root, quality, bite_idx):

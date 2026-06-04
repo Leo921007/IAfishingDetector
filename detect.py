@@ -7,8 +7,8 @@ from pathlib import Path
 
 import cv2
 
-from config import REPO_ROOT, load_config
-from corcho_detector import CorchoDetector
+from pesca.config import REPO_ROOT, load_config
+from pesca.corcho_detector import CorchoDetector
 
 
 def main() -> None:

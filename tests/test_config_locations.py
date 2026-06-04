@@ -1,7 +1,7 @@
 """Pruebas de la resolución de modelo y ROI por ubicación (headless)."""
 import pytest
 
-from config import REPO_ROOT, load_config, load_roi, resolve_model_path
+from pesca.config import REPO_ROOT, load_config, load_roi, resolve_model_path
 
 
 def test_resolve_model_path_specific():

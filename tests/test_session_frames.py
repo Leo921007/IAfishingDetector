@@ -3,7 +3,7 @@ import json
 
 import numpy as np
 
-from session import SessionRecorder
+from pesca.session import SessionRecorder
 
 
 def test_record_cycle_guarda_secuencia_con_cap(tmp_path):

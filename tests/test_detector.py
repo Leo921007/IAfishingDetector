@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from config import load_config
+from pesca.config import load_config
 
 REPO = Path(__file__).resolve().parents[1]
 MODEL = load_config().model_onnx  # ruta resuelta por detector_mode/location
@@ -19,7 +19,7 @@ needs_model = pytest.mark.skipif(
 
 def test_detector_importable_sin_display_ni_audio():
     """Importar la ruta de detección no debe requerir mss/pyautogui/keyboard/sounddevice."""
-    import corcho_detector
+    from pesca import corcho_detector
 
     assert hasattr(corcho_detector, "CorchoDetector")
     import sys
@@ -32,7 +32,7 @@ def test_detector_importable_sin_display_ni_audio():
 def test_deteccion_en_imagen_de_validacion():
     import cv2
 
-    from corcho_detector import CorchoDetector
+    from pesca.corcho_detector import CorchoDetector
 
     detector = CorchoDetector(MODEL, conf_threshold=0.4)
     imgs = sorted(VAL_DIR.glob("*.jpg"))

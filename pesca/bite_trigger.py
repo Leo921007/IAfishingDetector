@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from splash import foam_value, patch_box
+from pesca.splash import foam_value, patch_box
 
 
 class FoamBiteDetector:

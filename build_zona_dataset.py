@@ -21,7 +21,7 @@ import shutil
 from collections import defaultdict
 from pathlib import Path
 
-from config import REPO_ROOT
+from pesca.config import REPO_ROOT
 
 ZONA = REPO_ROOT / "locations" / "stormwind" / "dataset"
 RAW = ZONA / "raw"

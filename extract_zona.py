@@ -25,8 +25,8 @@ from typing import Dict, Iterator, List
 import cv2
 import numpy as np
 
-from config import REPO_ROOT, load_config
-from corcho_detector import CorchoDetector
+from pesca.config import REPO_ROOT, load_config
+from pesca.corcho_detector import CorchoDetector
 
 # Sesiones de la zona del usuario a 387x748 (misma escala). Otras (stub 50x80, sintética) se excluyen.
 DEFAULT_SESSIONS = ["20260601_222727", "20260601_221053"]

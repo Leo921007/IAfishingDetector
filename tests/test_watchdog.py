@@ -3,10 +3,10 @@ import numpy as np
 import pytest
 
 import main
-from bite_trigger import FoamBiteDetector
-from config import load_config
-from corcho_detector import Detection
-from session import SessionRecorder
+from pesca.bite_trigger import FoamBiteDetector
+from pesca.config import load_config
+from pesca.corcho_detector import Detection
+from pesca.session import SessionRecorder
 
 CFG = load_config()
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from config import load_config
+from pesca.config import load_config
 
 REPO = Path(__file__).resolve().parents[1]
 MODEL = load_config().model_onnx  # ruta resuelta por detector_mode/location

@@ -1,7 +1,7 @@
 """Pruebas del detector de mordida por foam (headless, secuencias sintéticas)."""
 import numpy as np
 
-from bite_trigger import FoamBiteDetector
+from pesca.bite_trigger import FoamBiteDetector
 
 BBOX = (30, 30, 50, 50)  # en un frame 80x80; patch_box ~ (25,25,55,55)
 

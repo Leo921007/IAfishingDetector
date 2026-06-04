@@ -25,8 +25,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from config import REPO_ROOT, load_config
-from corcho_detector import CorchoDetector
+from pesca.config import REPO_ROOT, load_config
+from pesca.corcho_detector import CorchoDetector
 
 DEFAULT_SESSIONS = ["20260602_100757", "20260601_222727", "20260601_221053"]
 MODEL = load_config().model_onnx  # modelo de la ubicación activa (config detector_mode/location)

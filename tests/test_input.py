@@ -1,5 +1,5 @@
 """Pruebas del timing del clic de loot (InputController, headless con pyautogui inyectado)."""
-import platform_io
+from pesca import platform_io
 
 
 class FakePG:

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from ultralytics import YOLO
 
-from config import REPO_ROOT
+from pesca.config import REPO_ROOT
 
 DATA = REPO_ROOT / "data" / "corcho_zona.yaml"
 OLD = REPO_ROOT / "models" / "corcho_detector" / "best.pt"

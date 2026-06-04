@@ -17,8 +17,8 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-from config import REPO_ROOT, load_config
-from corcho_detector import CorchoDetector
+from pesca.config import REPO_ROOT, load_config
+from pesca.corcho_detector import CorchoDetector
 
 SWEEP_MIN_CONF = 0.05  # se infiere una vez a conf baja y se filtra por umbral
 IOU_MATCH = 0.5

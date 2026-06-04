@@ -14,12 +14,12 @@ Se mantienen el WATCHDOG (sin corcho -> recast) y el PARKEO del cursor (tras loo
 import argparse
 import time
 
-from config import load_config
-from bite_trigger import FoamBiteDetector
-from corcho_detector import CorchoDetector
-from logging_setup import setup_logging
-from platform_io import FrameGrabber, InputController, ScreenCapturer
-from session import SessionRecorder
+from pesca.config import load_config
+from pesca.bite_trigger import FoamBiteDetector
+from pesca.corcho_detector import CorchoDetector
+from pesca.logging_setup import setup_logging
+from pesca.platform_io import FrameGrabber, InputController, ScreenCapturer
+from pesca.session import SessionRecorder
 
 CFG = load_config()
 

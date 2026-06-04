@@ -30,9 +30,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from config import REPO_ROOT, load_config
-from corcho_detector import CorchoDetector
-from splash import PATCH_SCALE, foam_value, patch_box  # fuente única (vivo == offline)
+from pesca.config import REPO_ROOT, load_config
+from pesca.corcho_detector import CorchoDetector
+from pesca.splash import PATCH_SCALE, foam_value, patch_box  # fuente única (vivo == offline)
 
 ROOT = REPO_ROOT / "captures_bite"
 OUT = ROOT / "analysis"
