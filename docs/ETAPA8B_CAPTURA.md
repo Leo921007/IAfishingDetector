@@ -18,7 +18,7 @@ Contexto: 8A (ver `ETAPA8A_DIP.md`) mostró que la mordida no es una caída de `
 :: en el equipo de juego, con el venv y la ROI ya calibrada en config.yaml
 .venv\Scripts\pip install mss keyboard
 :: keyboard suele requerir terminal como ADMINISTRADOR
-.venv\Scripts\python capture_bite.py            :: pre 4s / post 0.5s / buffer 6s / jpeg q90
+.venv\Scripts\python -m tools.capture_bite            :: pre 4s / post 0.5s / buffer 6s / jpeg q90
 ```
 
 - Graba la **ROI de config** lo más rápido posible y **loguea los fps reales** alcanzados.
@@ -31,8 +31,8 @@ Contexto: 8A (ver `ETAPA8A_DIP.md`) mostró que la mordida no es una caída de `
 ## 2. Analizar en WSL2 — `analyze_splash.py` (headless, usa `best_zona.onnx`)
 
 ```bash
-.venv/bin/python analyze_splash.py            # analiza captures_bite/*/
-.venv/bin/python analyze_splash.py --selftest # prueba el pipeline con una ventana sintética
+.venv/bin/python -m tools.analyze_splash            # analiza captures_bite/*/
+.venv/bin/python -m tools.analyze_splash --selftest # prueba el pipeline con una ventana sintética
 ```
 
 Por ventana: localiza el corcho (frames previos al splash), define un **parche ×1.5** y calcula por frame:

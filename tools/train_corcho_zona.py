@@ -16,7 +16,7 @@ from pathlib import Path
 
 from ultralytics import YOLO
 
-REPO = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / "data" / "corcho_zona.yaml"
 BASE = REPO / "models" / "corcho_detector" / "best.pt"  # fine-tune desde el modelo actual
 RUN_DIR = REPO / "runs" / "corcho" / "zona_v1"

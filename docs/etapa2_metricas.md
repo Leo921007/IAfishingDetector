@@ -36,4 +36,4 @@ Laptop (6 GB)**, `seed=0`, `deterministic=True`.
 Artefactos visuales (locales, no versionados): `runs/corcho/v1/confusion_matrix.png`,
 `results.png`, `PR_curve.png`, `val_batch0_pred.jpg`.
 
-Reproducción: `./.venv/bin/python train_corcho.py` (ver `ETAPA2_ENTRENAMIENTO.md`).
+Reproducción: `./.venv/bin/python -m tools.train_corcho` (ver `ETAPA2_ENTRENAMIENTO.md`).

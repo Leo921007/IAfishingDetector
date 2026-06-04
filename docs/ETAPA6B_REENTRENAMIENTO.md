@@ -35,7 +35,7 @@ zona es fácil para el modelo una vez que la ha visto). Modelo nuevo en
 | **NUEVO** (`zona_v1`) | **0.989** | **0.616** | 0.954 | 0.995 | **0/18 imgs · 0 cajas** |
 | Δ | +0.926 | +0.594 | — | — | **49 → 0 cajas espurias** |
 
-Reproducir: `./.venv/bin/python compare_zona.py`.
+Reproducir: `./.venv/bin/python -m tools.compare_zona`.
 
 ## 4. Conclusión HONESTA
 

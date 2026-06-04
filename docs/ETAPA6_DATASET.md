@@ -18,7 +18,7 @@
   el modelo dispara sobre la espuma en todos → **propuestas POCO FIABLES**, hay que corregirlas.
 - **Montaje:** `dataset_zona/montage.jpg` (rejilla con outcome + marca DIP) para juzgar calidad.
 - `dataset_zona/` está **gitignored** (pesado, local para etiquetar). Reproducir:
-  `./.venv/bin/python extract_zona.py`.
+  `./.venv/bin/python -m tools.extract_zona`.
 
 ## 2. ROI anclada
 
@@ -50,9 +50,9 @@ Pista: los ciclos `sin_sonido` (sin mordida) son buenos candidatos a negativo; l
 
 ```bash
 # 1) arma el split (val = zona nueva, incluye negativos) y el data yaml
-./.venv/bin/python build_zona_dataset.py
+./.venv/bin/python -m tools.build_zona_dataset
 # 2) fine-tune de YOLO11n desde el modelo actual (best.pt)
-./.venv/bin/python train_corcho_zona.py
+./.venv/bin/python -m tools.train_corcho_zona
 # 3) compara viejo vs nuevo en la zona (el dataset original queda intacto para comparar)
 ```
 

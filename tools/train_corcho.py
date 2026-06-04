@@ -15,7 +15,7 @@ Equivalente por CLI:
 from pathlib import Path
 from ultralytics import YOLO
 
-REPO = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / "data" / "corcho.yaml"
 
 

@@ -39,7 +39,7 @@ Dependencias fijadas en **`requirements-train.txt`** (UTF-8). El `requirements.t
 Script versionado: **`train_corcho.py`** (semilla fija `seed=0`, `deterministic=True`).
 
 ```bash
-./.venv/bin/python train_corcho.py
+./.venv/bin/python -m tools.train_corcho
 ```
 
 Equivalente por CLI:
@@ -100,7 +100,7 @@ Entrenamiento: 124 épocas (early stopping), ~4.7 min en RTX 4050.
 → Buen recall pero **8 falsos positivos** a umbral bajo: en producción **subir el umbral**
 (≈0.4–0.5) y/o **cruzar con la señal de audio** para descartarlos.
 
-Detalle y caveats en **`reports/etapa2_metricas.md`**. Artefactos visuales (locales, no
+Detalle y caveats en **`etapa2_metricas.md`**. Artefactos visuales (locales, no
 versionados): `runs/corcho/v1/{confusion_matrix.png, results.png, PR_curve.png, val_batch0_pred.jpg}`.
 
 **Verificación de carga + inferencia** (pasa):

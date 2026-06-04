@@ -70,7 +70,7 @@ Con `--record` (o `config.yaml: session.enabled`), por ciclo en `sessions/<times
 ```
 
 1. Pesca normalmente un rato; cada mordida deja `cycle_*_frames/` con el dip del corcho.
-2. Copia `sessions/<timestamp>/` al repo en WSL2 y revísala: `./.venv/bin/python replay.py --session sessions/<timestamp>`.
+2. Copia `sessions/<timestamp>/` al repo en WSL2 y revísala: `./.venv/bin/python -m tools.replay --session sessions/<timestamp>`.
 3. Aparta clips de audio **positivos** (mordidas) y **negativos** (sonidos sin mordida) y re-mide la
    especificidad real: `./.venv/bin/python bench_audio.py --positives pos/ --negatives neg/`.
 

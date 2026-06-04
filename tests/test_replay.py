@@ -14,7 +14,7 @@ needs_model = pytest.mark.skipif(not MODEL.exists(), reason="modelo ONNX ausente
 
 @needs_model
 def test_replay_muestra_headless(tmp_path):
-    from replay import make_sample_session, replay_session
+    from tools.replay import make_sample_session, replay_session
 
     sess = make_sample_session(tmp_path / "muestra")
     results = replay_session(sess)

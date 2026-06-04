@@ -65,7 +65,7 @@ keybind de lanzamiento (`2`), botón de loot, delays y parámetros de audio. Se 
 
 ```bash
 # CLI: imprime bbox + confianza sobre imágenes guardadas
-./.venv/bin/python detect_offline.py --source dataset/images/val
+./.venv/bin/python -m tools.detect_offline --source dataset/images/val
 
 # Pruebas
 ./.venv/bin/python -m pytest tests/ -v

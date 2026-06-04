@@ -56,10 +56,10 @@ Es la materia prima para mejorar la mordida y **ampliar el dataset** (Etapa 5+).
 
 ```bash
 # sintetizar una sesión-muestra mínima y reproducirla
-./.venv/bin/python replay.py --make-sample sessions/_muestra
-./.venv/bin/python replay.py --session sessions/_muestra
+./.venv/bin/python -m tools.replay --make-sample sessions/_muestra
+./.venv/bin/python -m tools.replay --session sessions/_muestra
 # reproducir una sesión real grabada en Windows (cópiala a sessions/)
-./.venv/bin/python replay.py --session sessions/<timestamp>
+./.venv/bin/python -m tools.replay --session sessions/<timestamp>
 ```
 
 El replay pasa los frames y wavs por **la misma** lógica de detección y match de audio, sin I/O en
@@ -67,7 +67,7 @@ vivo. Útil para depurar desenlaces y comparar umbrales con datos reales.
 
 ## 6. Afinado del umbral de confianza
 
-`./.venv/bin/python tune_threshold.py` barre `conf_threshold` sobre `dataset/images/val` (con GT) e
+`./.venv/bin/python -m tools.tune_threshold` barre `conf_threshold` sobre `dataset/images/val` (con GT) e
 imprime precisión/recall/F1. Resultado actual:
 
 | conf | TP | FP | FN | precision | recall | F1 |
