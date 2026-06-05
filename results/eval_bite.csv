@@ -1,0 +1,2 @@
+fecha,loc,condiciones,trigger,threshold,min_frames,catch_rate,false_fires_min,latencia_med,n_eventos,n_sesiones,sensitivity
+2026-06-05,stormwind,desconocida,foam,0.005,2,0.75,15.9262,-0.125,36,36,0.9722
