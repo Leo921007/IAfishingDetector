@@ -12,7 +12,7 @@ splash real está en los frames previos al 'b'. El análisis (analyze_splash.py)
 importar en WSL2 (para verificar que parsea) sin tenerlas instaladas; solo main() las necesita.
 
 Uso (en Windows, con el juego en primer plano; keyboard puede requerir admin):
-    .venv\\Scripts\\python capture_bite.py [--pre 4.0 --post 0.5 --buffer 6.0 --quality 90]
+    .venv\\Scripts\\python -m tools.capture_bite --cond noche_lluvia [--loc stormwind --pre 4.0 --post 1.5]
 Teclas: 'b' = marcar mordida y volcar la ventana | 'q' = salir.
 """
 from __future__ import annotations
@@ -29,44 +29,73 @@ import numpy as np
 
 from pesca.config import REPO_ROOT, load_config
 
+MANIFEST_VERSION = 2
+CONDITIONS = ("dia_claro", "dia_lluvia", "noche_claro", "noche_lluvia")
 
-def _dump_window(buf, t_press, pre, post, out_root, quality, bite_idx):
-    """Vuelca [t_press-pre, t_press+post] a captures_bite/<ts>/ con manifest.json."""
+
+def build_manifest(frame_times, t_press, pre, post, roi, location, condition,
+                   version: int = MANIFEST_VERSION) -> dict:
+    """Construye el manifest (v2) a partir de los TIEMPOS de los frames de la ventana.
+
+    Función PURA: no toca mss/keyboard/cv2/juego ni el disco — recibe tiempos y metadatos y devuelve el
+    dict. Los nombres de archivo se derivan determinísticamente (`frame_NNNN.jpg`), iguales a los que
+    escribe `_dump_window`, para que el manifest se pueda construir y testear headless.
+
+    `bite_events` = la(s) marca(s) 'b' del usuario (aquí una por ventana) = GROUND-TRUTH de mordida.
+    """
+    n = len(frame_times)
+    t0 = frame_times[0]
+    span = frame_times[-1] - t0
+    fps_real = (n - 1) / span if n > 1 and span > 0 else 0.0
+    keypress_index = min(range(n), key=lambda i: abs(frame_times[i] - t_press))
+    frames_meta = [
+        {"file": f"frame_{i:04d}.jpg",
+         "t_rel_seg": round(frame_times[i] - t0, 4),
+         "dt_from_press": round(frame_times[i] - t_press, 4)}
+        for i in range(n)
+    ]
+    bite_events = [{"t_rel_seg": round(t_press - t0, 4), "frame_index": keypress_index}]
+    return {
+        "version": version,
+        "location": location,
+        "condition": condition,
+        "roi": roi,
+        "fps_real": round(fps_real, 1),
+        "pre_seconds": pre, "post_seconds": post,
+        "n_frames": n, "keypress_index": keypress_index,
+        "frames": frames_meta,
+        "bite_events": bite_events,
+    }
+
+
+def _dump_window(buf, t_press, pre, post, out_root, quality, bite_idx, location, condition):
+    """Vuelca [t_press-pre, t_press+post] a captures_bite/<loc>_<cond>_<ts>_<NN>/ con manifest v2."""
     lo, hi = t_press - pre, t_press + post
     window = [(t, f) for (t, f) in buf if lo <= t <= hi]
     if not window:
         return None
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S_") + f"{bite_idx:02d}"
-    out = Path(out_root) / ts
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out = Path(out_root) / f"{location}_{condition}_{ts}_{bite_idx:02d}"
     out.mkdir(parents=True, exist_ok=True)
 
-    # índice del frame más cercano al keypress (dentro de la ventana guardada)
-    keypress_index = min(range(len(window)), key=lambda i: abs(window[i][0] - t_press))
-    fps_real = (len(window) - 1) / (window[-1][0] - window[0][0]) if len(window) > 1 else 0.0
-
-    frames_meta = []
-    for i, (t, frame_bgra) in enumerate(window):
-        name = f"frame_{i:04d}.jpg"
+    manifest = build_manifest([t for t, _ in window], t_press, pre, post,
+                              load_config().roi.as_mss(), location, condition)
+    for i, (_, frame_bgra) in enumerate(window):
         bgr = np.ascontiguousarray(frame_bgra[:, :, :3])
-        cv2.imwrite(str(out / name), bgr, [cv2.IMWRITE_JPEG_QUALITY, quality])
-        frames_meta.append({"file": name, "t": round(t - window[0][0], 4),
-                            "dt_from_press": round(t - t_press, 4)})
-
-    manifest = {
-        "roi": load_config().roi.as_mss(),
-        "fps_real": round(fps_real, 1),
-        "pre_seconds": pre, "post_seconds": post,
-        "n_frames": len(window), "keypress_index": keypress_index,
-        "frames": frames_meta,
-    }
+        cv2.imwrite(str(out / f"frame_{i:04d}.jpg"), bgr, [cv2.IMWRITE_JPEG_QUALITY, quality])
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return out, len(window), fps_real
+    return out, len(window), manifest["fps_real"]
 
 
 def main() -> int:
+    cfg = load_config()
     ap = argparse.ArgumentParser(description="Captura de la mordida a alta tasa (Windows)")
+    ap.add_argument("--loc", default=cfg.location,
+                    help=f"ubicación (default: {cfg.location}, de config.yaml)")
+    ap.add_argument("--cond", required=True, choices=CONDITIONS,
+                    help="condición de la sesión (día/noche × claro/lluvia)")
     ap.add_argument("--pre", type=float, default=4.0, help="segundos antes del keypress a guardar")
-    ap.add_argument("--post", type=float, default=0.5, help="segundos después del keypress a guardar")
+    ap.add_argument("--post", type=float, default=1.5, help="segundos después del keypress a guardar")
     ap.add_argument("--buffer", type=float, default=6.0, help="segundos del buffer rodante en RAM")
     ap.add_argument("--quality", type=int, default=90, help="calidad JPEG")
     ap.add_argument("--out", default=str(REPO_ROOT / "captures_bite"))
@@ -84,7 +113,8 @@ def main() -> int:
     n_since = 0
     t_fps0 = time.monotonic()
 
-    print(f"ROI={roi} | buffer={args.buffer}s pre={args.pre}s post={args.post}s")
+    print(f"loc={args.loc} cond={args.cond} | ROI={roi} | buffer={args.buffer}s "
+          f"pre={args.pre}s post={args.post}s")
     print("Grabando... pulsa 'b' al ver el chapuzón, 'q' para salir.")
 
     with mss.mss() as sct:
@@ -114,7 +144,8 @@ def main() -> int:
 
             # completar la ventana 'post' tras el keypress y volcar
             if pending_press is not None and now - pending_press >= args.post:
-                res = _dump_window(buf, pending_press, args.pre, args.post, args.out, args.quality, bite_count)
+                res = _dump_window(buf, pending_press, args.pre, args.post, args.out, args.quality,
+                                   bite_count, args.loc, args.cond)
                 if res:
                     out, nframes, fps_real = res
                     bite_count += 1
