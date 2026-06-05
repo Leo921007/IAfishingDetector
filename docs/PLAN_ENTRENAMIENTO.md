@@ -1,6 +1,7 @@
 # Plan de entrenamiento — detección de corcho + picadura
 
-Ubicaciones objetivo: **Stormwind**, **Barrens (Oasis)**, **Un'Goro Crater**.
+Ubicaciones objetivo (en orden): **Stormwind** → **Loch Verrall (Twilight Highlands)** →
+**Barrens (Oasis)** → **Un'Goro Crater**.
 Dos problemas de detección por ubicación: **posición del corcho** (`corcho`) y **picadura/mordida** (`mordida`).
 El énfasis del plan está en **validar la picadura de la mejor manera posible** (Sección 7).
 
@@ -39,6 +40,9 @@ Conclusión: la señal de picadura tiene que **aprenderse** (no un umbral de bri
 ---
 
 ## 4. Protocolo de captura (por ubicación)
+
+**Orden de ubicaciones**: Stormwind → Loch Verrall (Twilight Highlands) → Barrens (Oasis) →
+Un'Goro Crater. Cada una con su `roi.yaml`, su dataset y su `detector.onnx` en `locations/<loc>/`.
 
 **Matriz de condiciones** (capturar lo que se pueda; el clima en WoW es parcialmente aleatorio):
 
@@ -123,9 +127,10 @@ Por ubicación:
 
 - **Fase 0** — Tooling: `capture_bite` con condición + GT, etiquetador 2 clases, **arnés de validación**, split por sesión.
 - **Fase 1 — Stormwind**: capturar (todas las condiciones) → etiquetar → entrenar `corcho` + bake-off `mordida` → **validar con el arnés** → elegir arquitectura ganadora → confirmar en vivo → cambiar el trigger de foam a mordida.
-- **Fase 2 — Barrens (Oasis)**: repetir con la arquitectura elegida; su propio `roi.yaml` y dataset.
-- **Fase 3 — Un'Goro Crater**: repetir.
-- **Fase 4 (opcional)** — Modelo **general** entrenado sobre las 3 ubicaciones; comparar contra los específicos con el mismo arnés.
+- **Fase 2 — Loch Verrall (Twilight Highlands)**: repetir con la arquitectura elegida; su propio `roi.yaml` y dataset.
+- **Fase 3 — Barrens (Oasis)**: repetir.
+- **Fase 4 — Un'Goro Crater**: repetir.
+- **Fase 5 (opcional)** — Modelo **general** entrenado sobre las 4 ubicaciones; comparar contra los específicos con el mismo arnés.
 
 ---
 
